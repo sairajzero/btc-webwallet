@@ -2,6 +2,18 @@
 
 <head>
     <title>test</title>
+    <style>
+        body {
+            background-color: grey;
+        }
+
+        table,
+        tr,
+        td,
+        th {
+            border: 1px solid black;
+        }
+    </style>
     <script type="text/javascript" src="lib.js"></script>
     <script type="text/javascript" src="lib_btc.js"></script>
 </head>
@@ -23,14 +35,6 @@
             Address: <input name="address" type="text" placeholder="Address" disabled />
         </fieldset>
     </form>
-    <form id="check-balance">
-        <fieldset>
-            <legend>check-balance</legend>
-            <input name="address" type="text" placeholder="Address" />
-            <input type="button" value="check" onclick="checkBalance();">
-            <div>Balance: <input name="balance" disabled /></div>
-        </fieldset>
-    </form>
     <form id="send-tx">
         <fieldset>
             <legend>send-tx</legend>
@@ -39,6 +43,27 @@
             <input name="amount" type="number" placeholder="Amount" />
             <input name="fee" type="number" placeholder="fee" step="0.0001" />
             <input type="button" value="send" onclick="sendTx();">
+        </fieldset>
+    </form>
+    <form id="address-details">
+        <fieldset>
+            <legend>address-details</legend>
+            <input name="address" type="text" placeholder="Address" />
+            <input type="button" value="balance" onclick="checkBalance();">
+            <input type="button" value="details" onclick="viewAddress();">
+            <div>Balance: <input name="balance" disabled /></div>
+            <table>
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>address</th>
+                        <th>amount</th>
+                        <th>time</th>
+                        <th>txid</th>
+                    </tr>
+                </thead>
+                <tbody id="view-details"></tbody>
+            </table>
         </fieldset>
     </form>
 </body>
@@ -56,7 +81,7 @@
     }
 
     function checkBalance() {
-        let form = document.forms['check-balance'];
+        let form = document.forms['address-details'];
         let address = form["address"].value;
         btc_api.getBalance(address)
             .then(result => form["balance"].value = result)
@@ -74,6 +99,60 @@
             console.log(result);
             alert("transaction id: " + result.txid);
         }).catch(error => console.error(error))
+    }
+
+    function viewAddress() {
+        let form = document.forms['address-details']
+        let address = form['address'].value;
+        let table = document.getElementById("view-details");
+        table.innerHTML = '';
+        form['balance'].value = '';
+        getAddressDetails(address).then(result => {
+            console.debug(result);
+            form['balance'].value = result.balance;
+            result.txs.forEach(tx => {
+                let row = table.insertRow();
+                if (tx.type === "out") {
+                    row.insertCell().innerHTML = '&#8599;';
+                    row.insertCell().textContent = tx.receiver;
+                } else if (tx.type === "in") {
+                    row.insertCell().innerHTML = '&#8601;';
+                    row.insertCell().textContent = tx.sender;
+                }
+                row.insertCell().textContent = tx.amount;
+                row.insertCell().textContent = tx.time;
+                row.insertCell().textContent = tx.txid;
+            });
+        }).catch(error => console.error(error))
+    }
+
+    function getAddressDetails(address) {
+        return new Promise((resolve, reject) => {
+            btc_api.getAddressData(address).then(data => {
+                console.debug(data);
+                let details = {};
+                details.balance = data.balance;
+                details.address = data.address;
+                details.txs = data.txs.map(tx => {
+                    let d = {
+                        txid: tx.txid,
+                        time: tx.time
+                    }
+                    //TODO: handle when both in and out (change to same)
+                    if (tx.incoming) {
+                        d.type = "in";
+                        d.amount = tx.incoming.value;
+                        d.sender = tx.incoming.inputs.map(i => i.address)
+                    } else if (tx.outgoing) {
+                        d.type = "out";
+                        d.amount = tx.outgoing.value;
+                        d.receiver = tx.outgoing.outputs.map(i => i.address)
+                    }
+                    return d;
+                })
+                resolve(details);
+            }).catch(error => reject(error))
+        })
     }
 </script>
 
