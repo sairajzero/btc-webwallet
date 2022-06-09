@@ -2548,3 +2548,99 @@
 
     })();
 })(typeof global !== "undefined" ? global : window);
+
+(function(EXPORTS) { //btc_api v1.0.0
+    const btc_api = EXPORTS;
+
+    const URL = "https://chain.so/api/v2/";
+
+    const fetch_api = btc_api.fetch = function(api, post = null) {
+        return new Promise((resolve, reject) => {
+            let uri = URL + api;
+            console.debug(uri);
+            (post === null ? fetch(uri) : fetch(uri, {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(post)
+            })).then(response => {
+                response.json()
+                    .then(result => result.status === "success" ? resolve(result) : reject(result))
+                    .catch(error => reject(error))
+            }).catch(error => reject(error))
+        })
+    };
+
+    Object.defineProperties(btc_api, {
+        newKeys: {
+            get: () => coinjs.newKeys()
+        },
+        address: {
+            value: key => coinjs.wif2address(key.length === 64 ? coinjs.privkey2wif(key) : key).address
+        }
+    });
+
+    const getUTXO = addr => fetch_api(`get_tx_unspent/BTC/${addr}`);
+
+    const getBalance = btc_api.getBalance = addr => new Promise((resolve, reject) => {
+        fetch_api(`get_address_balance/BTC/${addr}`)
+            .then(result => resolve(parseFloat(result.data.confirmed_balance)))
+            .catch(error => reject(error))
+    });
+
+    btc_api.sendTx = function(senderID, senderPrivKey, receiverID, amount, fee) {
+        return new Promise((resolve, reject) => {
+            //if(btc_api.address(senderPrivKey) !== senderID)
+            //    return reject("Invalid privateKey")
+            getBalance(senderID).then(balance => {
+                if (balance < amount + fee)
+                    return reject("Insufficient Balance");
+                //coinjs.compressed = true; //true if WIF?
+                var r = coinjs.transaction();
+                //var wif = coinjs.privkey2wif(privKeyHex); //privateKey: Hex to WIF
+                //var address1 = coinjs.scripthash2address(address0); //receiver: Hash to Hex
+                getUTXO(senderID).then(result => {
+                    let utxos = result.data.txs;
+                    console.debug(balance, utxos);
+                    var input_total = 0;
+                    for (let i = 0; i < utxos.length && input_total < amount + fee; i++) {
+                        input_total += parseFloat(utxos[i].value);
+                        r.addinput(utxos[i].txid, utxos[i].output_no, utxos[i].script_hex, 0xffffffff /*sequence*/ );
+                    }
+                    r.addoutput(receiverID, amount);
+                    if (input_total > amount + fee)
+                        r.addoutput(senderID, input_total - (amount + fee));
+                    console.debug(input_total, amount, fee, input_total - (amount + fee));
+                    console.debug("Unsigned:", r.serialize());
+                    r.sign(senderPrivKey, 1 /*sighashtype*/ ); //Sign the tx using private key WIF
+                    console.debug("Signed:", r.serialize());
+                    return resolve(r);
+                    debugger;
+                    fetch_api('send_tx/BTC', {
+                        tx_hex: r.serialize()
+                    }).then(result => resolve(result)).catch(error => reject(error))
+                }).catch(error => reject(error))
+            }).catch(error => reject(error))
+        })
+    };
+
+    btc_api.getTx = txid => new Promise((resolve, reject) => {
+        fetch_api(`get_tx/BTC/${txid}`)
+            .then(result => resolve(result.data))
+            .catch(error => reject(error))
+    });
+
+    btc_api.getAddressData = addr => new Promise((resolve, reject) => {
+        fetch_api(`address/BTC/${addr}`)
+            .then(result => resolve(result.data))
+            .catch(error => reject(error))
+    });
+
+    btc_api.getBlock = block => new Promise((resolve, reject) => {
+        fetch_api(`get_block/BTC/${block}`)
+            .then(result => resolve(result.data))
+            .catch(error => reject(error))
+    });
+
+})('object' === typeof module ? module.exports : window.btc_api = {});
