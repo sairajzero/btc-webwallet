@@ -13,7 +13,12 @@
         th {
             border: 1px solid black;
         }
+
+        .unconfirmed-tx {
+            color: darkred;
+        }
     </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script type="text/javascript" src="lib.js"></script>
     <script type="text/javascript" src="lib_btc.js"></script>
 </head>
@@ -44,7 +49,7 @@
             <legend>send-tx</legend>
             <input name="sender" type="text" placeholder="Sender" />
             <input name="receiver" type="text" placeholder="Receiver" />
-            <input name="amount" type="number" placeholder="Amount" step="0.01"/>
+            <input name="amount" type="number" placeholder="Amount" step="0.01" />
             <input name="fee" type="number" placeholder="fee" step="0.000001" />
             <input type="button" value="send" onclick="sendTx();">
         </fieldset>
@@ -127,10 +132,15 @@
                 } else if (tx.type === "in") {
                     row.insertCell().innerHTML = '&#8601;';
                     row.insertCell().textContent = tx.sender;
+                } else if (tx.type === "self") {
+                    row.insertCell().innerHTML = '&#10226';
+                    row.insertCell().textContent = tx.address;
                 }
                 row.insertCell().textContent = tx.amount;
                 row.insertCell().textContent = tx.time;
                 row.insertCell().textContent = tx.txid;
+                if (tx.block === null)
+                    row.className = 'unconfirmed-tx';
             });
         }).catch(error => console.error(error))
     }
@@ -145,17 +155,32 @@
                 details.txs = data.txs.map(tx => {
                     let d = {
                         txid: tx.txid,
-                        time: tx.time
+                        time: tx.time,
+                        block: tx.block_no
                     }
-                    //TODO: handle when both in and out (change to same)
-                    if (tx.incoming) {
-                        d.type = "in";
-                        d.amount = tx.incoming.value;
-                        d.sender = tx.incoming.inputs.map(i => i.address)
-                    } else if (tx.outgoing) {
+                    if (tx.outgoing) {
                         d.type = "out";
-                        d.amount = tx.outgoing.value;
-                        d.receiver = tx.outgoing.outputs.map(i => i.address)
+                        d.amount = 0;
+                        d.receiver = [];
+                        let change = 0;
+                        tx.outgoing.outputs.forEach(o => {
+                            if (o.address !== address) {
+                                d.receiver.push(o.address)
+                                d.amount += parseFloat(o.value)
+                            } else
+                                change += parseFloat(o.value)
+                        });
+                        d.fee = parseFloat((tx.outgoing.value - (d.amount + change)).toFixed(8))
+                        if (!d.amount && change > 0) {
+                            d.type = "self";
+                            d.amount = change
+                            delete d.receiver;
+                            d.address = address;
+                        }
+                    } else if (tx.incoming) {
+                        d.type = "in";
+                        d.amount = parseFloat(tx.incoming.value);
+                        d.sender = tx.incoming.inputs.map(i => i.address)
                     }
                     return d;
                 })

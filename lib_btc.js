@@ -2549,25 +2549,34 @@
     })();
 })(typeof global !== "undefined" ? global : window);
 
-(function(EXPORTS) { //btc_api v1.0.1
+(function(EXPORTS) { //btc_api v1.0.2
     const btc_api = EXPORTS;
 
     const URL = "https://chain.so/api/v2/";
 
-    const fetch_api = btc_api.fetch = function(api, post = null) {
+    const fetch_api = btc_api.fetch = function(api) {
         return new Promise((resolve, reject) => {
-            let uri = URL + api;
-            console.debug(uri, post);
-            (post === null ? fetch(uri) : fetch(uri, {
-                method: "POST",
-                body: JSON.stringify(post)
-            })).then(response => {
+            console.debug(URL + api);
+            fetch(URL + api).then(response => {
                 response.json()
                     .then(result => result.status === "success" ? resolve(result) : reject(result))
                     .catch(error => reject(error))
             }).catch(error => reject(error))
         })
     };
+
+    const broadcast = btc_api.broadcast = rawtx => new Promise((resolve, reject) => {
+        $.ajax({
+            type: "POST",
+            url: URL + "send_tx/BTC/",
+            data: {
+                "tx_hex": rawtx
+            },
+            dataType: "json",
+            error: e => reject(e.responseJSON),
+            success: r => r.status === "success" ? resolve(r) : reject(r)
+        })
+    });
 
     Object.defineProperties(btc_api, {
         newKeys: {
@@ -2602,8 +2611,8 @@
 
     btc_api.sendTx = function(senderID, senderPrivKey, receiverID, amount, fee) {
         return new Promise((resolve, reject) => {
-            //if(btc_api.address(senderPrivKey) !== senderID)
-            //    return reject("Invalid privateKey")
+            if (coinjs.wif2address(senderPrivKey).address !== senderID)
+                return reject("Invalid privateKey");
             getBalance(senderID).then(balance => {
                 if (balance < amount + fee)
                     return reject("Insufficient Balance");
@@ -2626,11 +2635,9 @@
                     console.debug("Unsigned:", r.serialize());
                     r.sign(senderPrivKey, 1 /*sighashtype*/ ); //Sign the tx using private key WIF
                     console.debug("Signed:", r.serialize());
-                    return resolve(r);
-                    debugger;
-                    fetch_api('send_tx/BTC', {
-                        tx_hex: r.serialize()
-                    }).then(result => resolve(result)).catch(error => reject(error))
+                    broadcast(r.serialize())
+                        .then(result => resolve(result))
+                        .catch(error => reject(error));
                 }).catch(error => reject(error))
             }).catch(error => reject(error))
         })
