@@ -2549,7 +2549,7 @@
     })();
 })(typeof global !== "undefined" ? global : window);
 
-(function(EXPORTS) { //btc_api v1.0.0
+(function(EXPORTS) { //btc_api v1.0.1
     const btc_api = EXPORTS;
 
     const URL = "https://chain.so/api/v2/";
@@ -2557,12 +2557,9 @@
     const fetch_api = btc_api.fetch = function(api, post = null) {
         return new Promise((resolve, reject) => {
             let uri = URL + api;
-            console.debug(uri);
+            console.debug(uri, post);
             (post === null ? fetch(uri) : fetch(uri, {
                 method: "POST",
-                headers: {
-                    'Content-Type': 'application/json'
-                },
                 body: JSON.stringify(post)
             })).then(response => {
                 response.json()
@@ -2574,10 +2571,24 @@
 
     Object.defineProperties(btc_api, {
         newKeys: {
-            get: () => coinjs.newKeys()
+            get: () => {
+                let r = coinjs.newKeys();
+                r.segwitAddress = coinjs.segwitAddress(r.pubkey).address;
+                r.bech32Address = coinjs.bech32Address(r.pubkey).address;
+                return r;
+            }
+        },
+        pubkey: {
+            value: key => key.length === 64 ? coinjs.newPubkey(key) : coinjs.wif2pubkey(key).pubkey
         },
         address: {
-            value: key => coinjs.wif2address(key.length === 64 ? coinjs.privkey2wif(key) : key).address
+            value: key => coinjs.pubkey2address(btc_api.pubkey(key))
+        },
+        segwitAddress: {
+            value: key => coinjs.segwitAddress(btc_api.pubkey(key)).address
+        },
+        bech32Address: {
+            value: key => coinjs.bech32Address(btc_api.pubkey(key)).address
         }
     });
 

@@ -1,7 +1,7 @@
 <html>
 
 <head>
-    <title>test</title>
+    <title>BTC webWallet</title>
     <style>
         body {
             background-color: grey;
@@ -23,16 +23,20 @@
         <fieldset>
             <legend>generate-address</legend>
             <input type="button" value="generate" onclick="generateNew();">
-            Address: <input name="address" type="text" placeholder="Address" disabled />
-            PrivateKey: <input name="private" type="text" placeholder="Private-Key" disabled />
+            Address: <input name="address" type="text" placeholder="Address" disabled /><br />
+            SegwitAddress: <input name="segwit" type="text" placeholder="SegwitAddress" disabled /><br />
+            Bech32Address: <input name="bech32" type="text" placeholder="Bech32Address" disabled /><br />
+            PrivateKey: <input name="private" type="text" placeholder="Private-Key" disabled /><br />
         </fieldset>
     </form>
     <form id="retrieve-address">
         <fieldset>
             <legend>retrieve-address</legend>
             <input name="private" type="text" placeholder="Private-Key" />
-            <input type="button" value="retrieve" onclick="retrieveAddress();">
-            Address: <input name="address" type="text" placeholder="Address" disabled />
+            <input type="button" value="retrieve" onclick="retrieveAddress();"><br />
+            Address: <input name="address" type="text" placeholder="Address" disabled /><br />
+            SegwitAddress: <input name="segwit" type="text" placeholder="SegwitAddress" disabled /><br />
+            Bech32Address: <input name="bech32" type="text" placeholder="Bech32Address" disabled /><br />
         </fieldset>
     </form>
     <form id="send-tx">
@@ -40,8 +44,8 @@
             <legend>send-tx</legend>
             <input name="sender" type="text" placeholder="Sender" />
             <input name="receiver" type="text" placeholder="Receiver" />
-            <input name="amount" type="number" placeholder="Amount" />
-            <input name="fee" type="number" placeholder="fee" step="0.0001" />
+            <input name="amount" type="number" placeholder="Amount" step="0.01"/>
+            <input name="fee" type="number" placeholder="fee" step="0.000001" />
             <input type="button" value="send" onclick="sendTx();">
         </fieldset>
     </form>
@@ -71,13 +75,18 @@
     function generateNew() {
         let newKeys = btc_api.newKeys;
         let form = document.forms['generate-address'];
-        form['private'].value = newKeys.privkey;
+        form['private'].value = newKeys.wif;
         form['address'].value = newKeys.address;
+        form['segwit'].value = newKeys.segwitAddress;
+        form['bech32'].value = newKeys.bech32Address;
     }
 
     function retrieveAddress() {
         let form = document.forms['retrieve-address'];
-        form['address'].value = btc_api.address(form['private'].value);
+        let wif = form['private'].value;
+        form['address'].value = btc_api.address(wif);
+        form['segwit'].value = btc_api.segwitAddress(wif);
+        form['bech32'].value = btc_api.bech32Address(wif);
     }
 
     function checkBalance() {
@@ -153,6 +162,22 @@
                 resolve(details);
             }).catch(error => reject(error))
         })
+    }
+
+    function testGenerator() {
+        let n = btc_api.newKeys;
+        let a1 = btc_api.address(n.wif);
+        let b1 = btc_api.bech32Address(n.wif);
+        let c1 = btc_api.segwitAddress(n.wif);
+        let p1 = btc_api.pubkey(n.wif);
+        let a2 = btc_api.address(n.privkey);
+        let b2 = btc_api.bech32Address(n.privkey);
+        let c2 = btc_api.segwitAddress(n.privkey);
+        let p2 = btc_api.pubkey(n.privkey);
+        console.log(n.pubkey === p1 && p2 === p1);
+        console.log(n.address === a1 && a1 === a2);
+        console.log(n.segwitAddress === c1 && c2 === c1);
+        console.log(n.bech32Address === b1 && b1 === b2);
     }
 </script>
 
