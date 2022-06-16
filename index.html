@@ -82,16 +82,16 @@
         let form = document.forms['generate-address'];
         form['private'].value = newKeys.wif;
         form['address'].value = newKeys.address;
-        //form['segwit'].value = newKeys.segwitAddress;
-        //form['bech32'].value = newKeys.bech32Address;
+        form['segwit'].value = newKeys.segwitAddress;
+        form['bech32'].value = newKeys.bech32Address;
     }
 
     function retrieveAddress() {
         let form = document.forms['retrieve-address'];
         let wif = form['private'].value;
         form['address'].value = btc_api.address(wif);
-        //form['segwit'].value = btc_api.segwitAddress(wif);
-        //form['bech32'].value = btc_api.bech32Address(wif);
+        form['segwit'].value = btc_api.segwitAddress(wif);
+        form['bech32'].value = btc_api.bech32Address(wif);
     }
 
     function checkBalance() {
@@ -161,15 +161,16 @@
                     if (tx.outgoing) {
                         d.type = "out";
                         d.amount = 0;
-                        d.receiver = [];
+                        d.receiver = new Set();
                         let change = 0;
                         tx.outgoing.outputs.forEach(o => {
                             if (o.address !== address) {
-                                d.receiver.push(o.address)
+                                d.receiver.add(o.address)
                                 d.amount += parseFloat(o.value)
                             } else
                                 change += parseFloat(o.value)
                         });
+                        d.receiver = Array.from(d.receiver);
                         d.fee = parseFloat((tx.outgoing.value - (d.amount + change)).toFixed(8))
                         if (!d.amount && change > 0) {
                             d.type = "self";
@@ -180,7 +181,7 @@
                     } else if (tx.incoming) {
                         d.type = "in";
                         d.amount = parseFloat(tx.incoming.value);
-                        d.sender = tx.incoming.inputs.map(i => i.address)
+                        d.sender = Array.from(new Set(tx.incoming.inputs.map(i => i.address)));
                     }
                     return d;
                 })
