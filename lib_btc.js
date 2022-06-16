@@ -2549,7 +2549,7 @@
     })();
 })(typeof global !== "undefined" ? global : window);
 
-(function(EXPORTS) { //btc_api v1.0.2
+(function(EXPORTS) { //btc_api v1.0.3
     const btc_api = EXPORTS;
 
     const URL = "https://chain.so/api/v2/";
@@ -2574,7 +2574,7 @@
             },
             dataType: "json",
             error: e => reject(e.responseJSON),
-            success: r => r.status === "success" ? resolve(r) : reject(r)
+            success: r => r.status === "success" ? resolve(r.data) : reject(r)
         })
     });
 
@@ -2601,6 +2601,21 @@
         }
     });
 
+    coinjs.compressed = true;
+
+    const verifyKey = btc_api.verifyKey = function(addr, key) {
+        switch (coinjs.addressDecode(addr).type) {
+            case "standard":
+                return btc_api.address(key) === addr;
+            case "multisig":
+                return btc_api.segwitAddress(key) === addr;
+            case "bech32":
+                return btc_api.bech32Address(key) === addr;
+            default:
+                return null;
+        }
+    }
+
     const getUTXO = addr => fetch_api(`get_tx_unspent/BTC/${addr}`);
 
     const getBalance = btc_api.getBalance = addr => new Promise((resolve, reject) => {
@@ -2609,10 +2624,27 @@
             .catch(error => reject(error))
     });
 
+    function getRedeemScript(addr, key) {
+        let decode = coinjs.addressDecode(addr);
+        switch (decode.type) {
+            case "standard":
+                return false;
+            case "multisig":
+                return coinjs.segwitAddress(btc_api.pubkey(key)).redeemscript;
+            case "bech32":
+                return decode.redeemscript;
+            default:
+                return null;
+        }
+    }
+
     btc_api.sendTx = function(senderID, senderPrivKey, receiverID, amount, fee) {
         return new Promise((resolve, reject) => {
-            if (coinjs.wif2address(senderPrivKey).address !== senderID)
+            if (!verifyKey(senderID, senderPrivKey))
                 return reject("Invalid privateKey");
+            if (senderPrivKey.length === 64) //convert Hex to WIF if needed
+                senderPrivKey = coinjs.privkey2wif(key);
+            let redeemScript = getRedeemScript(senderID, senderPrivKey);
             getBalance(senderID).then(balance => {
                 if (balance < amount + fee)
                     return reject("Insufficient Balance");
@@ -2621,20 +2653,30 @@
                 //var wif = coinjs.privkey2wif(privKeyHex); //privateKey: Hex to WIF
                 //var address1 = coinjs.scripthash2address(address0); //receiver: Hash to Hex
                 getUTXO(senderID).then(result => {
-                    let utxos = result.data.txs;
+                    let utxos = result.data.txs.reverse();
                     console.debug(balance, utxos);
                     var input_total = 0;
                     for (let i = 0; i < utxos.length && input_total < amount + fee; i++) {
                         input_total += parseFloat(utxos[i].value);
-                        r.addinput(utxos[i].txid, utxos[i].output_no, utxos[i].script_hex, 0xffffffff /*sequence*/ );
+                        let script = utxos[i].script_hex;
+                        if (redeemScript) { //redeemScript for segwit/bech32
+                            let s = coinjs.script();
+                            s.writeBytes(Crypto.util.hexToBytes(redeemScript));
+                            s.writeOp(0);
+                            s.writeBytes(coinjs.numToBytes((utxos[i].value * 100000000).toFixed(0), 8));
+                            script = Crypto.util.bytesToHex(s.buffer);
+                        }
+                        r.addinput(utxos[i].txid, utxos[i].output_no, script, 0xffffffff /*sequence*/ );
                     }
                     r.addoutput(receiverID, amount);
-                    if (input_total > amount + fee)
-                        r.addoutput(senderID, input_total - (amount + fee));
-                    console.debug(input_total, amount, fee, input_total - (amount + fee));
+                    let change = parseFloat((input_total - (amount + fee)).toFixed(8));
+                    if (change)
+                        r.addoutput(senderID, change);
+                    console.debug(input_total, amount, fee, change);
                     console.debug("Unsigned:", r.serialize());
                     r.sign(senderPrivKey, 1 /*sighashtype*/ ); //Sign the tx using private key WIF
                     console.debug("Signed:", r.serialize());
+                    debugger;
                     broadcast(r.serialize())
                         .then(result => resolve(result))
                         .catch(error => reject(error));
