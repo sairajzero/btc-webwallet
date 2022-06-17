@@ -1,210 +1,289 @@
+<!doctype html>
 <html>
 
 <head>
     <title>BTC webWallet</title>
     <style>
-        body {
-            background-color: grey;
-        }
-
-        table,
-        tr,
-        td,
-        th {
-            border: 1px solid black;
-        }
-
         .unconfirmed-tx {
-            color: darkred;
+            color: red;
         }
     </style>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
     <script type="text/javascript" src="lib.js"></script>
     <script type="text/javascript" src="lib_btc.js"></script>
 </head>
 
 <body>
-    <form id="generate-address">
-        <fieldset>
-            <legend>generate-address</legend>
-            <input type="button" value="generate" onclick="generateNew();">
-            Address: <input name="address" type="text" placeholder="Address" disabled /><br />
-            SegwitAddress: <input name="segwit" type="text" placeholder="SegwitAddress" disabled /><br />
-            Bech32Address: <input name="bech32" type="text" placeholder="Bech32Address" disabled /><br />
-            PrivateKey: <input name="private" type="text" placeholder="Private-Key" disabled /><br />
-        </fieldset>
-    </form>
-    <form id="retrieve-address">
-        <fieldset>
-            <legend>retrieve-address</legend>
-            <input name="private" type="text" placeholder="Private-Key" />
-            <input type="button" value="retrieve" onclick="retrieveAddress();"><br />
-            Address: <input name="address" type="text" placeholder="Address" disabled /><br />
-            SegwitAddress: <input name="segwit" type="text" placeholder="SegwitAddress" disabled /><br />
-            Bech32Address: <input name="bech32" type="text" placeholder="Bech32Address" disabled /><br />
-        </fieldset>
-    </form>
-    <form id="send-tx">
-        <fieldset>
-            <legend>send-tx</legend>
-            <input name="sender" type="text" placeholder="Sender" />
-            <input name="receiver" type="text" placeholder="Receiver" />
-            <input name="amount" type="number" placeholder="Amount" step="0.01" />
-            <input name="fee" type="number" placeholder="fee" step="0.000001" />
-            <input type="button" value="send" onclick="sendTx();">
-        </fieldset>
-    </form>
-    <form id="address-details">
-        <fieldset>
-            <legend>address-details</legend>
-            <input name="address" type="text" placeholder="Address" />
-            <input type="button" value="balance" onclick="checkBalance();">
-            <input type="button" value="details" onclick="viewAddress();">
-            <div>Balance: <input name="balance" disabled /></div>
-            <table>
-                <thead>
-                    <tr>
-                        <th></th>
-                        <th>address</th>
-                        <th>amount</th>
-                        <th>time</th>
-                        <th>txid</th>
-                    </tr>
-                </thead>
-                <tbody id="view-details"></tbody>
-            </table>
-        </fieldset>
-    </form>
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a class="navbar-brand"><i class="glyphicon glyphicon-bitcoin"></i>itcoin WebWallet</a>
+            </div>
+            <ul id="menu" class="nav navbar-nav">
+                <li data-n="1"><a href="#">Address</a></li>
+                <li data-n="2"><a href="#">Send</a></li>
+                <li data-n="3" class="active"><a href="#">Details</a></li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container-fluid">
+        <div name="panels" data-n="1" id="address-gen-panel" class="panel panel-default hide">
+            <div class="panel-heading">Address Generator</div>
+            <div class="panel-body">
+                <form id="generate-address" autocomplete="off">
+                    <div class="form-group">
+                        <label class="radio-inline"><input type="radio" name="gen-radio" value="generate" checked>Generate</label>
+                        <label class="radio-inline"><input type="radio" name="gen-radio" value="retrieve">Retrieve</label>
+                        <button type="button" name="submit" class="btn btn-default">Go</button>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i>Private</span>
+                        <input type="password" class="form-control" name="private" placeholder="PrivateKey" disabled>
+                        <div class="input-group-btn">
+                            <button class="btn btn-default" name="eye" type="button">
+                                <i class="glyphicon glyphicon-eye-close"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-addon"><i>Bech32</i></span>
+                        <input type="text" class="form-control" name="bech32" placeholder="Bech32Address" disabled>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-addon"><i>Segwit</i></span>
+                        <input type="text" class="form-control" name="segwit" placeholder="SegwitAddress" disabled>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-addon"><i>Legacy</i></span>
+                        <input type="text" class="form-control" name="legacy" placeholder="LegacyAddress" disabled>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div name="panels" data-n="2" id="send-tx-panel" class="panel panel-default hide">
+            <div class="panel-heading">Send Transaction</div>
+            <div class="panel-body">
+                <form id="send-tx">
+                    <div class="form-group">
+                        <div class="input-group">
+                            <span class="input-group-addon"><i>Sender</i></span>
+                            <input type="text" class="form-control" name="sender" placeholder="Sender ID">
+                        </div>
+                        <div class="input-group">
+                            <div class="input-group-btn">
+                                <button class="btn btn-default" name="check-balance" type="button">Balance</button>
+                            </div>
+                            <input type="number" class="form-control" name="balance" placeholder="Check Balance" disabled>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="input-group">
+                            <span class="input-group-addon"><i>Receiver</i></span>
+                            <input type="text" class="form-control" name="receiver" placeholder="Receiver ID">
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-addon"><i>Amount</i></span>
+                            <input type="number" class="form-control" name="amount" placeholder="Amount" min="0" step="0.01">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-addon"><i>Fee</i></span>
+                        <input type="number" class="form-control" name="fee" placeholder="Fee" min="0" step="0.000001">
+                    </div>
+                    <button type="button" name="submit" class="btn btn-default btn-block"><b>Send</b></button>
+                </form>
+            </div>
+        </div>
+        <div name="panels" data-n="3" id="view-details-panel" class="panel panel-default">
+            <div class="panel-heading">Address Details</div>
+            <div class="panel-body">
+                <form id="address-details">
+                    <div class="input-group">
+                        <span class="input-group-addon"><i>Address</i></span>
+                        <input type="text" class="form-control" name="address" placeholder="Address">
+                        <div class="input-group-btn">
+                            <button class="btn btn-default" name="submit" type="button"><b class="glyphicon glyphicon-search"></b></button>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-addon"><i class="glyphicon glyphicon-bitcoin"></i></span>
+                        <input type="number" class="form-control" name="balance" placeholder="Balance" disabled>
+                    </div>
+                </form>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Address</th>
+                            <th>Amount</th>
+                            <th>Time</th>
+                            <th>TxID</th>
+                        </tr>
+                    </thead>
+                    <tbody id="view-details"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+
+
 </body>
 <script>
-    function generateNew() {
-        let newKeys = btc_api.newKeys;
-        let form = document.forms['generate-address'];
-        form['private'].value = newKeys.wif;
-        form['address'].value = newKeys.address;
-        form['segwit'].value = newKeys.segwitAddress;
-        form['bech32'].value = newKeys.bech32Address;
-    }
+    (function() {
 
-    function retrieveAddress() {
-        let form = document.forms['retrieve-address'];
-        let wif = form['private'].value;
-        form['address'].value = btc_api.address(wif);
-        form['segwit'].value = btc_api.segwitAddress(wif);
-        form['bech32'].value = btc_api.bech32Address(wif);
-    }
+        let menu = document.getElementById('menu').children;
+        let panels = document.getElementsByName('panels');
+        for (let i = 0; i < menu.length; i++) {
+            menu[i].onclick = evt => {
+                let n = evt.target.parentElement.dataset.n;
+                for (let j = 0; j < menu.length; j++)
+                    if (menu[j].dataset.n == n)
+                        menu[j].classList.add('active');
+                    else
+                        menu[j].classList.remove('active');
+                for (let p = 0; p < panels.length; p++)
+                    if (panels[p].dataset.n == n)
+                        panels[p].classList.remove('hide');
+                    else
+                        panels[p].classList.add('hide');
+            }
+        }
 
-    function checkBalance() {
-        let form = document.forms['address-details'];
-        let address = form["address"].value;
-        btc_api.getBalance(address)
-            .then(result => form["balance"].value = result)
-            .catch(error => console.error(error))
-    }
-
-    function sendTx() {
-        let form = document.forms['send-tx'];
-        let sender = form["sender"].value,
-            receiver = form["receiver"].value,
-            amount = parseFloat(form["amount"].value),
-            fee = parseFloat(form["fee"].value);
-        let privKey = prompt("Enter Private Key:");
-        btc_api.sendTx(sender, privKey, receiver, amount, fee).then(result => {
-            console.log(result);
-            alert("transaction id: " + result.txid);
-        }).catch(error => console.error(error))
-    }
-
-    function viewAddress() {
-        let form = document.forms['address-details']
-        let address = form['address'].value;
-        let table = document.getElementById("view-details");
-        table.innerHTML = '';
-        form['balance'].value = '';
-        getAddressDetails(address).then(result => {
-            console.debug(result);
-            form['balance'].value = result.balance;
-            result.txs.forEach(tx => {
-                let row = table.insertRow();
-                if (tx.type === "out") {
-                    row.insertCell().innerHTML = '&#8599;';
-                    row.insertCell().textContent = tx.receiver;
-                } else if (tx.type === "in") {
-                    row.insertCell().innerHTML = '&#8601;';
-                    row.insertCell().textContent = tx.sender;
-                } else if (tx.type === "self") {
-                    row.insertCell().innerHTML = '&#10226';
-                    row.insertCell().textContent = tx.address;
+        let addressForm = document.forms['generate-address'];
+        for (let i = 0; i < addressForm['gen-radio'].length; i++)
+            addressForm['gen-radio'][i].addEventListener('change', evt => addressForm['private'].disabled = evt.target.value === "generate");
+        addressForm['eye'].onclick = evt => {
+            if (addressForm['private'].type === "password")
+                addressForm['private'].type = "text";
+            else
+                addressForm['private'].type = "password";
+        }
+        addressForm['submit'].onclick = evt => {
+            switch (addressForm['gen-radio'].value) {
+                case "generate": {
+                    let newKeys = btc_api.newKeys;
+                    addressForm['private'].value = newKeys.wif;
+                    addressForm['legacy'].value = newKeys.address;
+                    addressForm['segwit'].value = newKeys.segwitAddress;
+                    addressForm['bech32'].value = newKeys.bech32Address;
+                    break;
                 }
-                row.insertCell().textContent = tx.amount;
-                row.insertCell().textContent = tx.time;
-                row.insertCell().textContent = tx.txid;
-                if (tx.block === null)
-                    row.className = 'unconfirmed-tx';
-            });
-        }).catch(error => console.error(error))
-    }
+                case "retrieve": {
+                    let wif = addressForm['private'].value;
+                    addressForm['legacy'].value = btc_api.address(wif);
+                    addressForm['segwit'].value = btc_api.segwitAddress(wif);
+                    addressForm['bech32'].value = btc_api.bech32Address(wif);
+                    break;
+                }
+            }
+        }
 
-    function getAddressDetails(address) {
-        return new Promise((resolve, reject) => {
-            btc_api.getAddressData(address).then(data => {
-                console.debug(data);
-                let details = {};
-                details.balance = data.balance;
-                details.address = data.address;
-                details.txs = data.txs.map(tx => {
-                    let d = {
-                        txid: tx.txid,
-                        time: tx.time,
-                        block: tx.block_no
+        let sendForm = document.forms['send-tx'];
+        sendForm['check-balance'].onclick = evt => {
+            let address = sendForm["sender"].value;
+            sendForm['check-balance'].disabled = true;
+            btc_api.getBalance(address)
+                .then(result => sendForm["balance"].value = result)
+                .catch(error => console.error(error))
+                .finally(_ => sendForm['check-balance'].disabled = false)
+        }
+        sendForm['submit'].onclick = evt => {
+            let sender = sendForm["sender"].value,
+                receiver = sendForm["receiver"].value,
+                amount = parseFloat(sendForm["amount"].value),
+                fee = parseFloat(sendForm["fee"].value);
+            console.debug(sender, receiver, amount, fee)
+            let privKey = prompt("Enter Private Key:");
+            sendForm['submit'].disabled = true;
+            btc_api.sendTx(sender, privKey, receiver, amount, fee).then(result => {
+                console.log(result);
+                alert("transaction id: " + result.txid);
+            }).catch(error => console.error(error)).finally(_ => sendForm['submit'].disabled = false)
+        }
+
+        let detailsForm = document.forms['address-details'];
+        detailsForm['submit'].onclick = evt => {
+            detailsForm['submit'].disabled = true;
+            let address = detailsForm['address'].value;
+            let table = document.getElementById("view-details");
+            table.innerHTML = '';
+            detailsForm['balance'].value = '';
+            getAddressDetails(address).then(result => {
+                console.debug(result);
+                detailsForm['balance'].value = result.balance;
+                result.txs.forEach(tx => {
+                    let row = table.insertRow();
+                    if (tx.type === "out") {
+                        row.insertCell().innerHTML = '&#8599;';
+                        row.insertCell().textContent = tx.receiver;
+                    } else if (tx.type === "in") {
+                        row.insertCell().innerHTML = '&#8601;';
+                        row.insertCell().textContent = tx.sender;
+                    } else if (tx.type === "self") {
+                        row.insertCell().innerHTML = '&#10226';
+                        row.insertCell().textContent = tx.address;
                     }
-                    if (tx.outgoing) {
-                        d.type = "out";
-                        d.amount = 0;
-                        d.receiver = new Set();
-                        let change = 0;
-                        tx.outgoing.outputs.forEach(o => {
-                            if (o.address !== address) {
-                                d.receiver.add(o.address)
-                                d.amount += parseFloat(o.value)
-                            } else
-                                change += parseFloat(o.value)
-                        });
-                        d.receiver = Array.from(d.receiver);
-                        d.fee = parseFloat((tx.outgoing.value - (d.amount + change)).toFixed(8))
-                        if (!d.amount && change > 0) {
-                            d.type = "self";
-                            d.amount = change
-                            delete d.receiver;
-                            d.address = address;
+                    row.insertCell().textContent = tx.amount;
+                    row.insertCell().textContent = tx.time;
+                    row.insertCell().textContent = tx.txid;
+                    if (tx.block === null)
+                        row.className = 'unconfirmed-tx';
+                });
+            }).catch(error => console.error(error)).finally(_ => detailsForm['submit'].disabled = false)
+        }
+
+        function getAddressDetails(address) {
+            return new Promise((resolve, reject) => {
+                btc_api.getAddressData(address).then(data => {
+                    console.debug(data);
+                    let details = {};
+                    details.balance = data.balance;
+                    details.address = data.address;
+                    details.txs = data.txs.map(tx => {
+                        let d = {
+                            txid: tx.txid,
+                            time: tx.time,
+                            block: tx.block_no
                         }
-                    } else if (tx.incoming) {
-                        d.type = "in";
-                        d.amount = parseFloat(tx.incoming.value);
-                        d.sender = Array.from(new Set(tx.incoming.inputs.map(i => i.address)));
-                    }
-                    return d;
-                })
-                resolve(details);
-            }).catch(error => reject(error))
-        })
-    }
+                        if (tx.outgoing) {
+                            d.type = "out";
+                            d.amount = 0;
+                            d.receiver = new Set();
+                            let change = 0;
+                            tx.outgoing.outputs.forEach(o => {
+                                if (o.address !== address) {
+                                    d.receiver.add(o.address)
+                                    d.amount += parseFloat(o.value)
+                                } else
+                                    change += parseFloat(o.value)
+                            });
+                            d.receiver = Array.from(d.receiver);
+                            d.fee = parseFloat((tx.outgoing.value - (d.amount + change)).toFixed(8))
+                            if (!d.amount && change > 0) {
+                                d.type = "self";
+                                d.amount = change
+                                delete d.receiver;
+                                d.address = address;
+                            }
+                        } else if (tx.incoming) {
+                            d.type = "in";
+                            d.amount = parseFloat(tx.incoming.value);
+                            d.sender = Array.from(new Set(tx.incoming.inputs.map(i => i.address)));
+                        }
+                        return d;
+                    })
+                    resolve(details);
+                }).catch(error => reject(error))
+            })
+        }
 
-    function testGenerator() {
-        let n = btc_api.newKeys;
-        let a1 = btc_api.address(n.wif);
-        let b1 = btc_api.bech32Address(n.wif);
-        let c1 = btc_api.segwitAddress(n.wif);
-        let p1 = btc_api.pubkey(n.wif);
-        let a2 = btc_api.address(n.privkey);
-        let b2 = btc_api.bech32Address(n.privkey);
-        let c2 = btc_api.segwitAddress(n.privkey);
-        let p2 = btc_api.pubkey(n.privkey);
-        console.log(n.pubkey === p1 && p2 === p1);
-        console.log(n.address === a1 && a1 === a2);
-        console.log(n.segwitAddress === c1 && c2 === c1);
-        console.log(n.bech32Address === b1 && b1 === b2);
-    }
+    })();
 </script>
 
 </html>
