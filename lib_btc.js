@@ -2549,7 +2549,7 @@
     })();
 })(typeof global !== "undefined" ? global : window);
 
-(function(EXPORTS) { //btc_api v1.0.3
+(function(EXPORTS) { //btc_api v1.0.4
     const btc_api = EXPORTS;
 
     const URL = "https://chain.so/api/v2/";
@@ -2604,6 +2604,8 @@
     coinjs.compressed = true;
 
     const verifyKey = btc_api.verifyKey = function(addr, key) {
+        if (!addr || !key)
+            return undefined;
         switch (coinjs.addressDecode(addr).type) {
             case "standard":
                 return btc_api.address(key) === addr;
@@ -2638,7 +2640,7 @@
         }
     }
 
-    btc_api.sendTx = function(senderID, senderPrivKey, receiverID, amount, fee) {
+    btc_api.sendTx = function(senderID, senderPrivKey, receivers, fee) {
         return new Promise((resolve, reject) => {
             if (!verifyKey(senderID, senderPrivKey))
                 return reject("Invalid privateKey");
@@ -2646,17 +2648,18 @@
                 senderPrivKey = coinjs.privkey2wif(key);
             let redeemScript = getRedeemScript(senderID, senderPrivKey);
             getBalance(senderID).then(balance => {
-                if (balance < amount + fee)
+                let total_amount = 0;
+                for (let r in receivers)
+                    total_amount += receivers[r];
+                total_amount = parseFloat(total_amount.toFixed(8));
+                if (balance < total_amount + fee)
                     return reject("Insufficient Balance");
-                //coinjs.compressed = true; //true if WIF?
-                var r = coinjs.transaction();
-                //var wif = coinjs.privkey2wif(privKeyHex); //privateKey: Hex to WIF
-                //var address1 = coinjs.scripthash2address(address0); //receiver: Hash to Hex
+                var tx = coinjs.transaction();
                 getUTXO(senderID).then(result => {
                     let utxos = result.data.txs.reverse();
                     console.debug(balance, utxos);
                     var input_total = 0;
-                    for (let i = 0; i < utxos.length && input_total < amount + fee; i++) {
+                    for (let i = 0; i < utxos.length && input_total < total_amount + fee; i++) {
                         input_total += parseFloat(utxos[i].value);
                         let script = utxos[i].script_hex;
                         if (redeemScript) { //redeemScript for segwit/bech32
@@ -2666,18 +2669,21 @@
                             s.writeBytes(coinjs.numToBytes((utxos[i].value * 100000000).toFixed(0), 8));
                             script = Crypto.util.bytesToHex(s.buffer);
                         }
-                        r.addinput(utxos[i].txid, utxos[i].output_no, script, 0xffffffff /*sequence*/ );
+                        tx.addinput(utxos[i].txid, utxos[i].output_no, script, 0xffffffff /*sequence*/ );
                     }
-                    r.addoutput(receiverID, amount);
-                    let change = parseFloat((input_total - (amount + fee)).toFixed(8));
+                    if (input_total < total_amount + fee)
+                        return reject("Insufficient Balance (UTXO)")
+                    for (let r in receivers)
+                        tx.addoutput(r, receivers[r]);
+                    let change = parseFloat((input_total - (total_amount + fee)).toFixed(8));
                     if (change)
-                        r.addoutput(senderID, change);
-                    console.debug(input_total, amount, fee, change);
-                    console.debug("Unsigned:", r.serialize());
-                    r.sign(senderPrivKey, 1 /*sighashtype*/ ); //Sign the tx using private key WIF
-                    console.debug("Signed:", r.serialize());
+                        tx.addoutput(senderID, change);
+                    console.debug(input_total, total_amount, fee, change);
+                    console.debug("Unsigned:", tx.serialize());
+                    tx.sign(senderPrivKey, 1 /*sighashtype*/ ); //Sign the tx using private key WIF
+                    console.debug("Signed:", tx.serialize());
                     debugger;
-                    broadcast(r.serialize())
+                    broadcast(tx.serialize())
                         .then(result => resolve(result))
                         .catch(error => reject(error));
                 }).catch(error => reject(error))

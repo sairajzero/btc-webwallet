@@ -81,15 +81,20 @@
                             <input type="number" class="form-control" name="balance" placeholder="Check Balance" disabled>
                         </div>
                     </div>
-                    <div class="form-group">
+                    <template class="receiver-template">
                         <div class="input-group">
                             <span class="input-group-addon"><i>Receiver</i></span>
                             <input type="text" class="form-control" name="receiver" placeholder="Receiver ID">
-                        </div>
-                        <div class="input-group">
                             <span class="input-group-addon"><i>Amount</i></span>
                             <input type="number" class="form-control" name="amount" placeholder="Amount" min="0" step="0.01">
+                            <div class="input-group-btn">
+                                <button class="btn btn-default" name="rm-receiver" type="button">X</button>
+                            </div>
                         </div>
+                    </template>
+                    <div class="form-group">
+                        <div class="receiver-container"></div>
+                        <button type="button" name="add-receiver" class="btn btn-default"><b>+</b></button>
                     </div>
                     <div class="input-group">
                         <span class="input-group-addon"><i>Fee</i></span>
@@ -193,15 +198,23 @@
                 .catch(error => console.error(error))
                 .finally(_ => sendForm['check-balance'].disabled = false)
         }
+        let receiver_template = sendForm.getElementsByClassName('receiver-template')[0],
+            receiver_container = sendForm.getElementsByClassName('receiver-container')[0];
+        sendForm['add-receiver'].onclick = evt => {
+            receiver_container.appendChild(receiver_template.content.cloneNode(true));
+            let clone = receiver_container.lastElementChild;
+            clone.getElementsByTagName("button")[0].onclick = evt => receiver_container.removeChild(clone);
+        };
+        sendForm['add-receiver'].click();
         sendForm['submit'].onclick = evt => {
             let sender = sendForm["sender"].value,
-                receiver = sendForm["receiver"].value,
-                amount = parseFloat(sendForm["amount"].value),
+                receivers = {},
                 fee = parseFloat(sendForm["fee"].value);
-            console.debug(sender, receiver, amount, fee)
+            for (let i = 0; i < sendForm["receiver"].length; i++)
+                receivers[sendForm["receiver"][i].value] = parseFloat(sendForm["amount"][i].value);
             let privKey = prompt("Enter Private Key:");
             sendForm['submit'].disabled = true;
-            btc_api.sendTx(sender, privKey, receiver, amount, fee).then(result => {
+            btc_api.sendTx(sender, privKey, receivers, fee).then(result => {
                 console.log(result);
                 alert("transaction id: " + result.txid);
             }).catch(error => console.error(error)).finally(_ => sendForm['submit'].disabled = false)
