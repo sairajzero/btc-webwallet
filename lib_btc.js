@@ -2549,7 +2549,7 @@
     })();
 })(typeof global !== "undefined" ? global : window);
 
-(function(EXPORTS) { //btc_api v1.0.4
+(function(EXPORTS) { //btc_api v1.0.4a
     const btc_api = EXPORTS;
 
     const URL = "https://chain.so/api/v2/";
@@ -2669,7 +2669,7 @@
                             s.writeBytes(coinjs.numToBytes((utxos[i].value * 100000000).toFixed(0), 8));
                             script = Crypto.util.bytesToHex(s.buffer);
                         }
-                        tx.addinput(utxos[i].txid, utxos[i].output_no, script, 0xffffffff /*sequence*/ );
+                        tx.addinput(utxos[i].txid, utxos[i].output_no, script, 0xfffffffd /*sequence*/ );
                     }
                     if (input_total < total_amount + fee)
                         return reject("Insufficient Balance (UTXO)")
