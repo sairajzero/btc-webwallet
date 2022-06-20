@@ -210,8 +210,13 @@
             let sender = sendForm["sender"].value,
                 receivers = {},
                 fee = parseFloat(sendForm["fee"].value);
-            for (let i = 0; i < sendForm["receiver"].length; i++)
-                receivers[sendForm["receiver"][i].value] = parseFloat(sendForm["amount"][i].value);
+            if (!sendForm["receiver"])
+                return console.warn("receiver cannot be empty");
+            else if (sendForm["receiver"] instanceof RadioNodeList)
+                for (let i = 0; i < sendForm["receiver"].length; i++)
+                    receivers[sendForm["receiver"][i].value] = parseFloat(sendForm["amount"][i].value);
+            else
+                receivers[sendForm["receiver"].value] = parseFloat(sendForm["amount"].value);
             let privKey = prompt("Enter Private Key:");
             sendForm['submit'].disabled = true;
             btc_api.sendTx(sender, privKey, receivers, fee).then(result => {
@@ -234,10 +239,10 @@
                     let row = table.insertRow();
                     if (tx.type === "out") {
                         row.insertCell().innerHTML = '&#8599;';
-                        row.insertCell().textContent = tx.receiver;
+                        row.insertCell().innerHTML = tx.receiver.join('<br/>');
                     } else if (tx.type === "in") {
                         row.insertCell().innerHTML = '&#8601;';
-                        row.insertCell().textContent = tx.sender;
+                        row.insertCell().innerHTML = tx.sender.join('<br/>');
                     } else if (tx.type === "self") {
                         row.insertCell().innerHTML = '&#10226';
                         row.insertCell().textContent = tx.address;
@@ -277,6 +282,7 @@
                                     change += parseFloat(o.value)
                             });
                             d.receiver = Array.from(d.receiver);
+                            d.amount = parseFloat(d.amount.toFixed(8))
                             d.fee = parseFloat((tx.outgoing.value - (d.amount + change)).toFixed(8))
                             if (!d.amount && change > 0) {
                                 d.type = "self";

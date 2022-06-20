@@ -2549,7 +2549,7 @@
     })();
 })(typeof global !== "undefined" ? global : window);
 
-(function(EXPORTS) { //btc_api v1.0.4a
+(function(EXPORTS) { //btc_api v1.0.4b
     const btc_api = EXPORTS;
 
     const URL = "https://chain.so/api/v2/";
@@ -2652,11 +2652,13 @@
                 for (let r in receivers)
                     total_amount += receivers[r];
                 total_amount = parseFloat(total_amount.toFixed(8));
+                if (total_amount < fee || total_amount <= 0)
+                    return reject("Invalid receiver amount");
                 if (balance < total_amount + fee)
                     return reject("Insufficient Balance");
                 var tx = coinjs.transaction();
                 getUTXO(senderID).then(result => {
-                    let utxos = result.data.txs.reverse();
+                    let utxos = result.data.txs;
                     console.debug(balance, utxos);
                     var input_total = 0;
                     for (let i = 0; i < utxos.length && input_total < total_amount + fee; i++) {
