@@ -69,17 +69,26 @@
             <div class="panel-heading">Send Transaction</div>
             <div class="panel-body">
                 <form id="send-tx">
-                    <div class="form-group">
+                    <template class="sender-template">
                         <div class="input-group">
                             <span class="input-group-addon"><i>Sender</i></span>
                             <input type="text" class="form-control" name="sender" placeholder="Sender ID">
+                            <span class="input-group-addon"><i>Balance</i></span>
+                            <input type="text" class="form-control" name="balance" placeholder="Balance" disabled>
+                            <div class="input-group-btn">
+                                <button class="btn btn-default" name="rm-sender" type="button">X</button>
+                            </div>
                         </div>
+                    </template>
+                    <div class="form-group">
+                        <div class="sender-container"></div>
                         <div class="input-group">
                             <div class="input-group-btn">
-                                <button class="btn btn-default" name="check-balance" type="button">Balance</button>
+                                <button class="btn btn-default" name="check-balance" type="button">Check Balance</button>
                             </div>
-                            <input type="number" class="form-control" name="balance" placeholder="Check Balance" disabled>
+                            <input type="number" class="form-control" name="total_balance" placeholder="Total Balance" disabled>
                         </div>
+                        <button type="button" name="add-sender" class="btn btn-default"><b>+</b></button>
                     </div>
                     <template class="receiver-template">
                         <div class="input-group">
@@ -110,7 +119,7 @@
                 <form id="address-details">
                     <div class="input-group">
                         <span class="input-group-addon"><i>Address</i></span>
-                        <input type="text" class="form-control" name="address" placeholder="Address">
+                        <input type="text" class="form-control" name="addr" placeholder="Address">
                         <div class="input-group-btn">
                             <button class="btn btn-default" name="submit" type="button"><b class="glyphicon glyphicon-search"></b></button>
                         </div>
@@ -190,13 +199,34 @@
         }
 
         let sendForm = document.forms['send-tx'];
+        let sender_template = sendForm.getElementsByClassName('sender-template')[0],
+            sender_container = sendForm.getElementsByClassName('sender-container')[0];
+        sendForm['add-sender'].onclick = evt => {
+            sender_container.appendChild(sender_template.content.cloneNode(true));
+            let clone = sender_container.lastElementChild;
+            clone.getElementsByTagName("button")[0].onclick = evt => sender_container.removeChild(clone);
+        };
+        sendForm['add-sender'].click();
         sendForm['check-balance'].onclick = evt => {
-            let address = sendForm["sender"].value;
-            sendForm['check-balance'].disabled = true;
-            btc_api.getBalance(address)
-                .then(result => sendForm["balance"].value = result)
-                .catch(error => console.error(error))
-                .finally(_ => sendForm['check-balance'].disabled = false)
+            sendForm["total_balance"].value = 0;
+            let addresses = [],
+                total_balance = 0;
+            if (!sendForm["sender"])
+                return;
+            else if (sendForm["sender"] instanceof RadioNodeList)
+                for (let i = 0; i < sendForm["sender"].length; i++)
+                    addresses.push(sendForm["sender"][i].value);
+            else
+                addresses.push(sendForm["sender"].value);
+            console.debug(addresses);
+            let balance_inputs = sendForm["balance"] instanceof RadioNodeList ? sendForm["balance"] : [sendForm["balance"]];
+            //sendForm['check-balance'].disabled = true;
+            addresses.forEach((addr, i) => btc_api.getBalance(addr).then(result => {
+                console.debug(addr, result)
+                balance_inputs[i].value = result;
+                sendForm["total_balance"].value = parseFloat(sendForm["total_balance"].value) + result;
+            }).catch(error => console.error(error)))
+            //  .finally(_ => sendForm['check-balance'].disabled = false)
         }
         let receiver_template = sendForm.getElementsByClassName('receiver-template')[0],
             receiver_container = sendForm.getElementsByClassName('receiver-container')[0];
@@ -207,19 +237,36 @@
         };
         sendForm['add-receiver'].click();
         sendForm['submit'].onclick = evt => {
-            let sender = sendForm["sender"].value,
-                receivers = {},
+            let senders = [],
+                receivers = [],
+                amounts = [],
                 fee = parseFloat(sendForm["fee"].value);
+            //inputs (senders)
+            if (!sendForm["sender"])
+                return console.warn("sender cannot be empty");
+            else if (sendForm["sender"] instanceof RadioNodeList)
+                for (let i = 0; i < sendForm["sender"].length; i++) {
+                    senders.push(sendForm["sender"][i].value);
+                }
+            else {
+                senders.push(sendForm["sender"].value);
+            }
+            //outputs (receivers and amounts)    
             if (!sendForm["receiver"])
                 return console.warn("receiver cannot be empty");
             else if (sendForm["receiver"] instanceof RadioNodeList)
-                for (let i = 0; i < sendForm["receiver"].length; i++)
-                    receivers[sendForm["receiver"][i].value] = parseFloat(sendForm["amount"][i].value);
-            else
-                receivers[sendForm["receiver"].value] = parseFloat(sendForm["amount"].value);
-            let privKey = prompt("Enter Private Key:");
+                for (let i = 0; i < sendForm["receiver"].length; i++) {
+                    receivers.push(sendForm["receiver"][i].value);
+                    amounts.push(parseFloat(sendForm["amount"][i].value));
+                }
+            else {
+                receivers.push(sendForm["receiver"].value);
+                amounts.push(parseFloat(sendForm["amount"].value));
+            }
+            console.debug(senders, receivers, amounts, fee);
+            let privkeys = senders.map(s => prompt(`Enter Private Key for ${s}:`))
             sendForm['submit'].disabled = true;
-            btc_api.sendTx(sender, privKey, receivers, fee).then(result => {
+            btc_api.sendTx(senders, privkeys, receivers, amounts, fee).then(result => {
                 console.log(result);
                 alert("transaction id: " + result.txid);
             }).catch(error => console.error(error)).finally(_ => sendForm['submit'].disabled = false)
@@ -228,7 +275,7 @@
         let detailsForm = document.forms['address-details'];
         detailsForm['submit'].onclick = evt => {
             detailsForm['submit'].disabled = true;
-            let address = detailsForm['address'].value;
+            let address = detailsForm['addr'].value;
             let table = document.getElementById("view-details");
             table.innerHTML = '';
             detailsForm['balance'].value = '';
