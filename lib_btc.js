@@ -1,4 +1,4 @@
-(function(GLOBAL) { //lib_btc v1.0.0
+(function(GLOBAL) { //lib_btc v1.0.1
     /* Utility Libraries required
      * All credits for these codes belong to their respective creators, moderators and owners.
      * For more info (including license and terms of use), please visit respective source.
@@ -1799,7 +1799,7 @@
                         };
                     } else if (this.ins[index].script.chunks[0] == 0 && this.ins[index].script.chunks[this.ins[index].script.chunks.length - 1][this.ins[index].script.chunks[this.ins[index].script.chunks.length - 1].length - 1] == 174) { // OP_CHECKMULTISIG
                         // multisig script, with signature(s) included
-                        sigcount = 0;
+                        var sigcount = 0;
                         for (i = 1; i < this.ins[index].script.chunks.length - 1; i++) {
                             if (this.ins[index].script.chunks[i] != 0) {
                                 sigcount++;
@@ -1822,10 +1822,13 @@
                         };
                     } else if (this.ins[index].script.chunks.length == 0) {
                         // empty
+                        //bech32 witness check
+                        var signed = ((this.witness[index]) && this.witness[index].length == 2) ? 'true' : 'false';
+                        var sigs = (signed == 'true') ? 1 : 0;
                         return {
                             'type': 'empty',
-                            'signed': 'false',
-                            'signatures': 0,
+                            'signed': signed,
+                            'signatures': sigs,
                             'script': ''
                         };
                     } else {
@@ -2077,16 +2080,23 @@
                         this.ins[index].script = script;
 
                         if (!coinjs.isArray(this.witness)) {
-                            this.witness = [];
+                            this.witness = new Array(this.ins.length);
+                            this.witness.fill([]);
                         }
 
-                        this.witness.push([signature, wif2['pubkey']]);
+                        this.witness[index] = ([signature, wif2['pubkey']]);
+
+                        // bech32, empty redeemscript
+                        if (bech32['redeemscript'] == Crypto.util.bytesToHex(this.ins[index].script.chunks[0])) {
+                            this.ins[index].script = coinjs.script();
+                        }
 
                         /* attempt to reorder witness data as best as we can. 
                            data can't be easily validated at this stage as 
                            we dont have access to the inputs value and 
                            making a web call will be too slow. */
 
+                        /*
                         var witness_order = [];
                         var witness_used = [];
                         for (var i = 0; i < this.ins.length; i++) {
@@ -2117,6 +2127,7 @@
                         }
 
                         this.witness = witness_order;
+                        */
                     }
                 }
                 return true;
@@ -2261,12 +2272,12 @@
                     for (i = 0; i < ins; ++i) {
                         var count = readVarInt();
                         var vector = [];
+                        if (!coinjs.isArray(obj.witness[i])) {
+                            obj.witness[i] = [];
+                        }
                         for (var y = 0; y < count; y++) {
                             var slice = readVarInt();
                             pos += slice;
-                            if (!coinjs.isArray(obj.witness[i])) {
-                                obj.witness[i] = [];
-                            }
                             obj.witness[i].push(Crypto.util.bytesToHex(buffer.slice(pos - slice, pos)));
                         }
                     }
@@ -2549,7 +2560,7 @@
     })();
 })(typeof global !== "undefined" ? global : window);
 
-(function(EXPORTS) { //btc_api v1.0.5
+(function(EXPORTS) { //btc_api v1.0.5a
     const btc_api = EXPORTS;
 
     const URL = "https://chain.so/api/v2/";
@@ -2659,6 +2670,8 @@
                 let utxos = result.data.txs;
                 console.debug("add-utxo", addr, rs, required_amount, utxos);
                 for (let i = 0; i < utxos.length && required_amount > 0; i++) {
+                    if (!utxos[i].confirmations) //ignore unconfirmed utxo
+                        continue;
                     required_amount -= parseFloat(utxos[i].value);
                     var script;
                     if (rs) { //redeemScript for segwit/bech32
@@ -2678,7 +2691,7 @@
         })
     }
 
-    btc_api.sendTx = function(senders, privkeys, receivers, amounts, fee) {
+    btc_api.sendTx = function(senders, privkeys, receivers, amounts, fee, change_addr = null) {
         return new Promise((resolve, reject) => {
             //Add values into array (if single values are passed)
             if (!Array.isArray(senders))
@@ -2724,6 +2737,8 @@
             }
             if (invalids.length)
                 return reject("Invalid amounts:" + invalids);
+            if (change_addr && !validateAddress(change_addr))
+                return reject("Invalid change_address:" + change_addr);
 
             //create transaction
             var tx = coinjs.transaction();
@@ -2735,7 +2750,7 @@
                     tx.addoutput(receivers[i], amounts[i]);
                 let change = parseFloat(Math.abs(result).toFixed(8));
                 if (change > 0)
-                    tx.addoutput(senders[0], change);
+                    tx.addoutput(change_addr || senders[0], change);
                 console.debug("amounts (total, fee, change):", total_amount, fee, change);
                 console.debug("Unsigned:", tx.serialize());
                 new Set(privkeys).forEach(key => console.debug("Signing key:", key, tx.sign(key, 1 /*sighashtype*/ ))); //Sign the tx using private key WIF
