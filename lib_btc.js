@@ -2560,7 +2560,7 @@
     })();
 })(typeof global !== "undefined" ? global : window);
 
-(function(EXPORTS) { //btc_api v1.0.5a
+(function(EXPORTS) { //btc_api v1.0.5b
     const btc_api = EXPORTS;
 
     const URL = "https://chain.so/api/v2/";
@@ -2639,7 +2639,7 @@
             return false;
     }
 
-    const getBalance = btc_api.getBalance = addr => new Promise((resolve, reject) => {
+    btc_api.getBalance = addr => new Promise((resolve, reject) => {
         fetch_api(`get_address_balance/BTC/${addr}`)
             .then(result => resolve(parseFloat(result.data.confirmed_balance)))
             .catch(error => reject(error))
@@ -2707,13 +2707,16 @@
             //validate tx-input parameters
             if (senders.length != privkeys.length)
                 return reject("Array length for senders and privkeys should be equal");
-            const redeemScripts = [];
+            const redeemScripts = [],
+                wif_keys = [];
             for (let i in senders) {
                 if (!verifyKey(senders[i], privkeys[i])) //verify private-key
                     invalids.push(senders[i]);
                 if (privkeys[i].length === 64) //convert Hex to WIF if needed
                     privkeys[i] = coinjs.privkey2wif(privkeys[i]);
-                redeemScripts.push(_redeemScript(senders[i], privkeys[i])); //get redeem-script (segwit/bech32)
+                let rs = _redeemScript(senders[i], privkeys[i]); //get redeem-script (segwit/bech32)
+                redeemScripts.push(rs);
+                rs === false ? wif_keys.unshift(privkeys[i]) : wif_keys.push(privkeys[i]); //sorting private-keys (wif)
             }
             if (invalids.length)
                 return reject("Invalid keys:" + invalids);
@@ -2753,7 +2756,7 @@
                     tx.addoutput(change_addr || senders[0], change);
                 console.debug("amounts (total, fee, change):", total_amount, fee, change);
                 console.debug("Unsigned:", tx.serialize());
-                new Set(privkeys).forEach(key => console.debug("Signing key:", key, tx.sign(key, 1 /*sighashtype*/ ))); //Sign the tx using private key WIF
+                new Set(wif_keys).forEach(key => console.debug("Signing key:", key, tx.sign(key, 1 /*sighashtype*/ ))); //Sign the tx using private key WIF
 
                 console.debug("Signed:", tx.serialize());
                 //debugger;
