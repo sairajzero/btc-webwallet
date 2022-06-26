@@ -2599,10 +2599,10 @@
             }
         },
         pubkey: {
-            value: key => key.length === 64 ? coinjs.newPubkey(key) : coinjs.wif2pubkey(key).pubkey
+            value: key => key.length === 66 ? key : (key.length === 64 ? coinjs.newPubkey(key) : coinjs.wif2pubkey(key).pubkey)
         },
         address: {
-            value: key => coinjs.pubkey2address(btc_api.pubkey(key))
+            value: (key, prefix = undefined) => coinjs.pubkey2address(btc_api.pubkey(key), prefix)
         },
         segwitAddress: {
             value: key => coinjs.segwitAddress(btc_api.pubkey(key)).address
@@ -2637,6 +2637,42 @@
             return type;
         else
             return false;
+    }
+
+    //convert WIF from one blockchain to another (target privkey-prefix needed)
+    btc_api.convert_wif = function(source_wif, target_prefix = coinjs.priv) {
+        //decode the wif
+        var decode = coinjs.base58decode(source_wif);
+        var key = decode.slice(0, decode.length - 4),
+            checksum = decode.slice(decode.length - 4);
+        //verify checksum of inpput wif
+        var hash = Crypto.SHA256(Crypto.SHA256(key, {
+            asBytes: true
+        }), {
+            asBytes: true
+        });
+        if (hash[0] != checksum[0] ||
+            hash[1] != checksum[1] ||
+            hash[2] != checksum[2] ||
+            hash[3] != checksum[3]) {
+            throw "Checksum validation failed!";
+        }
+        //version of input wif
+        let version = key.shift();
+        //check if wif is compressed
+        if (key.length < 33 || key[key.length - 1] != 0x01)
+            throw "Key is uncompressed";
+        //add target prefix
+        key.unshift(target_prefix);
+        //concat checksum
+        var hash = Crypto.SHA256(Crypto.SHA256(key, {
+            asBytes: true
+        }), {
+            asBytes: true
+        });
+        var checksum = hash.slice(0, 4);
+        key = key.concat(checksum);
+        return coinjs.base58encode(key);
     }
 
     btc_api.getBalance = addr => new Promise((resolve, reject) => {
