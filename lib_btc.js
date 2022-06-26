@@ -2759,10 +2759,10 @@
                 new Set(wif_keys).forEach(key => console.debug("Signing key:", key, tx.sign(key, 1 /*sighashtype*/ ))); //Sign the tx using private key WIF
 
                 console.debug("Signed:", tx.serialize());
-                //debugger;
-                //broadcast(tx.serialize())
-                //    .then(result => resolve(result))
-                //    .catch(error => reject(error));
+                debugger;
+                broadcast(tx.serialize())
+                    .then(result => resolve(result))
+                    .catch(error => reject(error));
             }).catch(error => reject(error))
         })
     };
