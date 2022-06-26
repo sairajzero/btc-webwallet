@@ -51,19 +51,49 @@
                         </div>
                     </div>
                     <div class="input-group">
-                        <span class="input-group-addon"><i>Bech32</i></span>
-                        <input type="text" class="form-control" name="bech32" placeholder="Bech32Address" disabled>
+                        <span class="input-group-addon"><i>Address</i></span>
+                        <input type="text" class="form-control" name="bech32" placeholder="Address" disabled>
                     </div>
-                    <div class="input-group">
+                    <div class="input-group hide">
                         <span class="input-group-addon"><i>Segwit</i></span>
                         <input type="text" class="form-control" name="segwit" placeholder="SegwitAddress" disabled>
                     </div>
-                    <div class="input-group">
+                    <div class="input-group hide">
                         <span class="input-group-addon"><i>Legacy</i></span>
                         <input type="text" class="form-control" name="legacy" placeholder="LegacyAddress" disabled>
                     </div>
                 </form>
             </div>
+        </div>
+        <div name="panels" data-n="1" id="address-gen-panel" class="panel panel-default hide">
+            <div class="panel-heading">Address Convertor</div>
+            <div class="panel-body">
+                <form id="convert-address" autocomplete="off">
+                    <div class="form-group">
+                        <div class="input-group">
+                            <span class="input-group-addon">Any Private</span>
+                            <input type="password" class="form-control" name="any-private" placeholder="Any PrivateKey">
+                            <div class="input-group-btn">
+                                <button class="btn btn-default" name="submit" type="button">Go</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-addon"><i class="glyphicon glyphicon-bitcoin"></i>Private</span>
+                        <input type="password" class="form-control" name="btc-private" placeholder="BTC PrivateKey" disabled>
+                        <div class="input-group-btn">
+                            <button class="btn btn-default" name="eye" type="button">
+                                <i class="glyphicon glyphicon-eye-close"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-addon"><i>Address</i></span>
+                        <input type="text" class="form-control" name="bech32" placeholder="Address" disabled>
+                    </div>
+                </form>
+            </div>
+            <div class="panel-footer"><i>Convert from any blockchain to BTC</i></div>
         </div>
         <div name="panels" data-n="2" id="send-tx-panel" class="panel panel-default hide">
             <div class="panel-heading">Send Transaction</div>
@@ -73,8 +103,10 @@
                         <div class="input-group">
                             <span class="input-group-addon"><i>Sender</i></span>
                             <input type="text" class="form-control" name="sender" placeholder="Sender ID">
-                            <span class="input-group-addon"><i>Balance</i></span>
-                            <input type="text" class="form-control" name="balance" placeholder="Balance" disabled>
+                            <span class="input-group-addon"><i class="glyphicon glyphicon-bitcoin"></i></span>
+                            <input type="number" class="form-control" name="balance" placeholder="Balance" disabled>
+                            <span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
+                            <input type="password" class="form-control" name="private" placeholder="PrivateKey">
                             <div class="input-group-btn">
                                 <button class="btn btn-default" name="rm-sender" type="button">X</button>
                             </div>
@@ -109,7 +141,11 @@
                         <span class="input-group-addon"><i>Fee</i></span>
                         <input type="number" class="form-control" name="fee" placeholder="Fee" min="0" step="0.000001">
                     </div>
-                    <button type="button" name="submit" class="btn btn-default btn-block"><b>Send</b></button>
+                    <button type="button" name="submit" class="btn btn-default btn-block"><b>Send</b></button><br />
+                    <div class="input-group">
+                        <span class="input-group-addon"><i>TxID</i></span>
+                        <input type="text" class="form-control" name="txid" placeholder="Transaction ID" disabled>
+                    </div>
                 </form>
             </div>
         </div>
@@ -198,6 +234,20 @@
             }
         }
 
+        let convertForm = document.forms['convert-address'];
+        convertForm['eye'].onclick = evt => {
+            if (convertForm['btc-private'].type === "password")
+                convertForm['btc-private'].type = "text";
+            else
+                convertForm['btc-private'].type = "password";
+        }
+        convertForm['submit'].onclick = evt => {
+            let source_wif = convertForm['any-private'].value;
+            let btc_wif = btc_api.convert_wif(source_wif);
+            convertForm['btc-private'].value = btc_wif;
+            convertForm['bech32'].value = btc_api.bech32Address(btc_wif);
+        }
+
         let sendForm = document.forms['send-tx'];
         let sender_template = sendForm.getElementsByClassName('sender-template')[0],
             sender_container = sendForm.getElementsByClassName('sender-container')[0];
@@ -237,24 +287,35 @@
         };
         sendForm['add-receiver'].click();
         sendForm['submit'].onclick = evt => {
+            //clear result box
+            sendForm['txid'].value = 'Processing';
+            sendForm['txid'].parentElement.classList.remove('has-error');
+            sendForm['txid'].parentElement.classList.remove('has-success');
             let senders = [],
+                privkeys = [],
                 receivers = [],
                 amounts = [],
                 fee = parseFloat(sendForm["fee"].value);
             //inputs (senders)
-            if (!sendForm["sender"])
+            if (!sendForm["sender"]) {
+                sendForm['txid'].value = 'Sender cannot be empty';
+                sendForm['txid'].parentElement.classList.add('has-error');
                 return console.warn("sender cannot be empty");
-            else if (sendForm["sender"] instanceof RadioNodeList)
+            } else if (sendForm["sender"] instanceof RadioNodeList)
                 for (let i = 0; i < sendForm["sender"].length; i++) {
                     senders.push(sendForm["sender"][i].value);
+                    privkeys.push(sendForm["private"][i].value);
                 }
             else {
                 senders.push(sendForm["sender"].value);
+                privkeys.push(sendForm["private"].value);
             }
             //outputs (receivers and amounts)    
-            if (!sendForm["receiver"])
+            if (!sendForm["receiver"]) {
+                sendForm['txid'].value = 'Receiver cannot be empty';
+                sendForm['txid'].parentElement.classList.add('has-error');
                 return console.warn("receiver cannot be empty");
-            else if (sendForm["receiver"] instanceof RadioNodeList)
+            } else if (sendForm["receiver"] instanceof RadioNodeList)
                 for (let i = 0; i < sendForm["receiver"].length; i++) {
                     receivers.push(sendForm["receiver"][i].value);
                     amounts.push(parseFloat(sendForm["amount"][i].value));
@@ -264,12 +325,16 @@
                 amounts.push(parseFloat(sendForm["amount"].value));
             }
             console.debug(senders, receivers, amounts, fee);
-            let privkeys = senders.map(s => prompt(`Enter Private Key for ${s}:`))
             sendForm['submit'].disabled = true;
             btc_api.sendTx(senders, privkeys, receivers, amounts, fee).then(result => {
                 console.log(result);
-                alert("transaction id: " + result.txid);
-            }).catch(error => console.error(error)).finally(_ => sendForm['submit'].disabled = false)
+                sendForm['txid'].value = result.txid;
+                sendForm['txid'].parentElement.classList.add('has-success');
+            }).catch(error => {
+                console.error(error);
+                sendForm['txid'].value = error;
+                sendForm['txid'].parentElement.classList.add('has-error');
+            }).finally(_ => sendForm['submit'].disabled = false)
         }
 
         let detailsForm = document.forms['address-details'];
