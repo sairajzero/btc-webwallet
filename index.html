@@ -28,6 +28,7 @@
                 <li data-n="1"><a href="#">Address</a></li>
                 <li data-n="2"><a href="#">Send</a></li>
                 <li data-n="3" class="active"><a href="#">Details</a></li>
+                <li data-n="4"><a href="#">Convert</a></li>
             </ul>
         </div>
     </nav>
@@ -64,11 +65,12 @@
                     </div>
                 </form>
             </div>
+            <div class="panel-footer"><span>Note: Safely store the <b>Private-Key</b>!</span></div>
         </div>
-        <div name="panels" data-n="1" id="address-gen-panel" class="panel panel-default hide">
-            <div class="panel-heading">Address Convertor</div>
+        <div name="panels" data-n="4" id="convert-key-panel" class="panel panel-default hide">
+            <div class="panel-heading">PrivateKey Convertor</div>
             <div class="panel-body">
-                <form id="convert-address" autocomplete="off">
+                <form id="convert-key" autocomplete="off">
                     <div class="form-group">
                         <div class="input-group">
                             <span class="input-group-addon">Any Private</span>
@@ -93,7 +95,33 @@
                     </div>
                 </form>
             </div>
-            <div class="panel-footer"><i>Convert from any blockchain to BTC</i></div>
+            <div class="panel-footer"><i>Convert: any blockchain &#x21d2; BTC</i></div>
+        </div>
+        <div name="panels" data-n="4" id="convert-address-panel" class="panel panel-default hide">
+            <div class="panel-heading">Address Convertor</div>
+            <div class="panel-body">
+                <form id="convert-address">
+                    <div class="input-group">
+                        <span class="input-group-addon"><i>BTC</i></span>
+                        <input type="text" class="form-control" name="btc-bech" placeholder="BTC Address">
+                        <div class="input-group-btn">
+                            <button class="btn btn-default" name="btc2flo" type="button">
+                                <i class="glyphicon glyphicon-arrow-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-addon"><i>FLO</i></span>
+                        <input type="text" class="form-control" name="flo-id" placeholder="FLO Address">
+                        <div class="input-group-btn">
+                            <button class="btn btn-default" name="flo2btc" type="button">
+                                <i class="glyphicon glyphicon-arrow-up"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="panel-footer"><i>Convert address: BTC &#x21D4; FLO</i></div>
         </div>
         <div name="panels" data-n="2" id="send-tx-panel" class="panel panel-default hide">
             <div class="panel-heading">Send Transaction</div>
@@ -234,18 +262,29 @@
             }
         }
 
-        let convertForm = document.forms['convert-address'];
-        convertForm['eye'].onclick = evt => {
-            if (convertForm['btc-private'].type === "password")
-                convertForm['btc-private'].type = "text";
+        let convertForm1 = document.forms['convert-key'];
+        convertForm1['eye'].onclick = evt => {
+            if (convertForm1['btc-private'].type === "password")
+                convertForm1['btc-private'].type = "text";
             else
-                convertForm['btc-private'].type = "password";
+                convertForm1['btc-private'].type = "password";
         }
-        convertForm['submit'].onclick = evt => {
-            let source_wif = convertForm['any-private'].value;
-            let btc_wif = btc_api.convert_wif(source_wif);
-            convertForm['btc-private'].value = btc_wif;
-            convertForm['bech32'].value = btc_api.bech32Address(btc_wif);
+        convertForm1['submit'].onclick = evt => {
+            let source_wif = convertForm1['any-private'].value;
+            let btc_wif = btc_api.convert.wif(source_wif);
+            convertForm1['btc-private'].value = btc_wif;
+            convertForm1['bech32'].value = btc_api.bech32Address(btc_wif);
+        }
+        let convertForm2 = document.forms['convert-address'];
+        convertForm2['flo2btc'].onclick = evt => {
+            let flo_addr = convertForm2['flo-id'].value;
+            convertForm2['btc-bech'].value = '';
+            convertForm2['btc-bech'].value = btc_api.convert.legacy2bech(flo_addr);
+        }
+        convertForm2['btc2flo'].onclick = evt => {
+            let btc_bech = convertForm2['btc-bech'].value;
+            convertForm2['flo-id'].value = '';
+            convertForm2['flo-id'].value = btc_api.convert.bech2legacy(btc_bech, 0x23);
         }
 
         let sendForm = document.forms['send-tx'];
@@ -255,7 +294,7 @@
             sender_container.appendChild(sender_template.content.cloneNode(true));
             let clone = sender_container.lastElementChild;
             clone.getElementsByTagName("button")[0].onclick = evt => sender_container.removeChild(clone);
-        };
+        }
         sendForm['add-sender'].click();
         sendForm['check-balance'].onclick = evt => {
             sendForm["total_balance"].value = 0;
@@ -284,7 +323,7 @@
             receiver_container.appendChild(receiver_template.content.cloneNode(true));
             let clone = receiver_container.lastElementChild;
             clone.getElementsByTagName("button")[0].onclick = evt => receiver_container.removeChild(clone);
-        };
+        }
         sendForm['add-receiver'].click();
         sendForm['submit'].onclick = evt => {
             //clear result box
