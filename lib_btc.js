@@ -2560,9 +2560,10 @@
     })();
 })(typeof global !== "undefined" ? global : window);
 
-(function(EXPORTS) { //btc_api v1.0.5b
+(function(EXPORTS) { //btc_api v1.0.6
     const btc_api = EXPORTS;
 
+    //This library uses API provided by chain.so (https://chain.so/)
     const URL = "https://chain.so/api/v2/";
 
     const fetch_api = btc_api.fetch = function(api) {
@@ -2599,7 +2600,7 @@
             }
         },
         pubkey: {
-            value: key => key.length === 66 ? key : (key.length === 64 ? coinjs.newPubkey(key) : coinjs.wif2pubkey(key).pubkey)
+            value: key => key.length >= 66 ? key : (key.length == 64 ? coinjs.newPubkey(key) : coinjs.wif2pubkey(key).pubkey)
         },
         address: {
             value: (key, prefix = undefined) => coinjs.pubkey2address(btc_api.pubkey(key), prefix)
@@ -2639,40 +2640,98 @@
             return false;
     }
 
-    //convert WIF from one blockchain to another (target privkey-prefix needed)
-    btc_api.convert_wif = function(source_wif, target_prefix = coinjs.priv) {
-        //decode the wif
-        var decode = coinjs.base58decode(source_wif);
-        var key = decode.slice(0, decode.length - 4),
+    //convert from one blockchain to another blockchain (target version)
+    btc_api.convert = {};
+
+    btc_api.convert.wif = function(source_wif, target_version = coinjs.priv) {
+        let keyHex = decodeLegacy(source_wif).hex;
+        if (!keyHex || keyHex.length < 66 || !/01$/.test(keyHex))
+            return null;
+        else
+            return encodeLegacy(keyHex, target_version);
+    }
+
+    btc_api.convert.legacy2legacy = function(source_addr, target_version = coinjs.pub) {
+        let rawHex = decodeLegacy(source_addr).hex;
+        if (!rawHex)
+            return null;
+        else
+            return encodeLegacy(rawHex, target_version);
+    }
+
+    btc_api.convert.legacy2bech = function(source_addr, target_version = coinjs.bech32.version, target_hrp = coinjs.bech32.hrp) {
+        let rawHex = decodeLegacy(source_addr).hex;
+        if (!rawHex)
+            return null;
+        else
+            return encodeBech32(rawHex, target_version, target_hrp);
+    }
+
+    btc_api.convert.bech2bech = function(source_addr, target_version = coinjs.bech32.version, target_hrp = coinjs.bech32.hrp) {
+        let rawHex = decodeBech32(source_addr).hex;
+        if (!rawHex)
+            return null;
+        else
+            return encodeBech32(rawHex, target_version, target_hrp);
+    }
+
+    btc_api.convert.bech2legacy = function(source_addr, target_version = coinjs.pub) {
+        let rawHex = decodeBech32(source_addr).hex;
+        if (!rawHex)
+            return null;
+        else
+            return encodeLegacy(rawHex, target_version);
+    }
+
+    function decodeLegacy(source) {
+        var decode = coinjs.base58decode(source);
+        var raw = decode.slice(0, decode.length - 4),
             checksum = decode.slice(decode.length - 4);
-        //verify checksum of inpput wif
-        var hash = Crypto.SHA256(Crypto.SHA256(key, {
+        var hash = Crypto.SHA256(Crypto.SHA256(raw, {
             asBytes: true
         }), {
             asBytes: true
         });
-        if (hash[0] != checksum[0] ||
-            hash[1] != checksum[1] ||
-            hash[2] != checksum[2] ||
-            hash[3] != checksum[3]) {
-            throw "Checksum validation failed!";
+        if (hash[0] != checksum[0] || hash[1] != checksum[1] || hash[2] != checksum[2] || hash[3] != checksum[3])
+            return null;
+        let version = raw.shift();
+        return {
+            version: version,
+            hex: Crypto.util.bytesToHex(raw)
         }
-        //version of input wif
-        let version = key.shift();
-        //check if wif is compressed
-        if (key.length < 33 || key[key.length - 1] != 0x01)
-            throw "Key is uncompressed";
-        //add target prefix
-        key.unshift(target_prefix);
-        //concat checksum
-        var hash = Crypto.SHA256(Crypto.SHA256(key, {
+    }
+
+    function encodeLegacy(hex, version) {
+        var bytes = Crypto.util.hexToBytes(hex);
+        bytes.unshift(version);
+        var hash = Crypto.SHA256(Crypto.SHA256(bytes, {
             asBytes: true
         }), {
             asBytes: true
         });
         var checksum = hash.slice(0, 4);
-        key = key.concat(checksum);
-        return coinjs.base58encode(key);
+        return coinjs.base58encode(bytes.concat(checksum));
+    }
+
+    function decodeBech32(source) {
+        let decode = coinjs.bech32_decode(source);
+        if (!decode)
+            return null;
+        var raw = decode.data;
+        let version = raw.shift();
+        raw = coinjs.bech32_convert(raw, 5, 8, false);
+        return {
+            hrp: decode.hrp,
+            version: version,
+            hex: Crypto.util.bytesToHex(raw)
+        }
+    }
+
+    function encodeBech32(hex, version, hrp) {
+        var bytes = Crypto.util.hexToBytes(hex);
+        bytes = coinjs.bech32_convert(bytes, 8, 5, true);
+        bytes.unshift(version)
+        return coinjs.bech32_encode(hrp, bytes);
     }
 
     btc_api.getBalance = addr => new Promise((resolve, reject) => {
