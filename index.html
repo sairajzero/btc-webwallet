@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>BTC webWallet</title>
+    <title>Bitcoin Web Wallet</title>
     <style>
         .unconfirmed-tx {
             color: red;
@@ -10,402 +10,1349 @@
     </style>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
-
+    <script src="components.js" defer></script>
+    <link rel="stylesheet" href="css/main.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Calistoga&family=Roboto:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/uhtml@3.0.1/es.js"></script>
     <script type="text/javascript" src="lib.js"></script>
     <script type="text/javascript" src="lib_btc.js"></script>
 </head>
 
 <body>
-    <nav class="navbar navbar-default">
-        <div class="container-fluid">
-            <div class="navbar-header">
-                <a class="navbar-brand"><i class="glyphicon glyphicon-bitcoin"></i>itcoin WebWallet</a>
+    <sm-notifications id="notification_drawer"></sm-notifications>
+    <sm-popup id="confirmation_popup">
+        <h4 id="confirm_title"></h4>
+        <p id="confirm_message"></p>
+        <div class="flex align-center">
+            <sm-button variant="no-outline" class="cancel-btn">Cancel</sm-button>
+            <sm-button variant="no-outline" class="submit-btn">OK</sm-button>
+        </div>
+    </sm-popup>
+    <div id="main_card">
+        <header id="main_header" class="flex align-center space-between">
+            <div class="flex align-center">
+                <svg class="icon margin-right-0-3" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24"
+                    height="24px" viewBox="0 0 24 24" width="24px" fill="#000000">
+                    <g>
+                        <rect fill="none" height="24" width="24" />
+                    </g>
+                    <g>
+                        <path
+                            d="M17.06,11.57C17.65,10.88,18,9.98,18,9c0-1.86-1.27-3.43-3-3.87L15,3h-2v2h-2V3H9v2H6v2h2v10H6v2h3v2h2v-2h2v2h2v-2 c2.21,0,4-1.79,4-4C19,13.55,18.22,12.27,17.06,11.57z M10,7h4c1.1,0,2,0.9,2,2s-0.9,2-2,2h-4V7z M15,17h-5v-4h5c1.1,0,2,0.9,2,2 S16.1,17,15,17z" />
+                    </g>
+                </svg>
+                <h4>Bitcoin Web Wallet</h4>
             </div>
-            <ul id="menu" class="nav navbar-nav">
-                <li data-n="1"><a href="#">Address</a></li>
-                <li data-n="2"><a href="#">Send</a></li>
-                <li data-n="3" class="active"><a href="#">Details</a></li>
-                <li data-n="4"><a href="#">Convert</a></li>
+            <div class="flex align-center">
+                <sm-select id="currency_selector" class="margin-right-0-5" align-select="right">
+                    <sm-option value="btc">BTC</sm-option>
+                    <sm-option value="inr">INR</sm-option>
+                    <sm-option value="usd">USD</sm-option>
+                </sm-select>
+                <theme-toggle></theme-toggle>
+            </div>
+        </header>
+        <main id="pages_container">
+            <div id="address_details" class="page hidden">
+                <section class="flex margin-bottom-1-5">
+                    <button id="gen_new_addr_btn" class="button primary-action interact">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24"
+                            height="24px" viewBox="0 0 24 24" width="24px" fill="#000000">
+                            <g>
+                                <rect fill="none" height="24" width="24" />
+                            </g>
+                            <g>
+                                <g>
+                                    <path
+                                        d="M18.32,4.26C16.84,3.05,15.01,2.25,13,2.05v2.02c1.46,0.18,2.79,0.76,3.9,1.62L18.32,4.26z M19.93,11h2.02 c-0.2-2.01-1-3.84-2.21-5.32L18.31,7.1C19.17,8.21,19.75,9.54,19.93,11z M18.31,16.9l1.43,1.43c1.21-1.48,2.01-3.32,2.21-5.32 h-2.02C19.75,14.46,19.17,15.79,18.31,16.9z M13,19.93v2.02c2.01-0.2,3.84-1,5.32-2.21l-1.43-1.43 C15.79,19.17,14.46,19.75,13,19.93z M13,12V7h-2v5H7l5,5l5-5H13z M11,19.93v2.02c-5.05-0.5-9-4.76-9-9.95s3.95-9.45,9-9.95v2.02 C7.05,4.56,4,7.92,4,12S7.05,19.44,11,19.93z" />
+                                </g>
+                            </g>
+                        </svg>
+                        Generate BTC address
+                    </button>
+                    <button id="retrieve_addr_btn" class="button primary-action interact"
+                        onclick="openPopup('retrieve_btc_addr_popup')">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24"
+                            width="24px" fill="#000000">
+                            <path d="M0 0h24v24H0V0z" fill="none" />
+                            <path
+                                d="M14 12c0-1.1-.9-2-2-2s-2 .9-2 2 .9 2 2 2 2-.9 2-2zm-2-9c-4.97 0-9 4.03-9 9H0l4 4 4-4H5c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.51 0-2.91-.49-4.06-1.3l-1.42 1.44C8.04 20.3 9.94 21 12 21c4.97 0 9-4.03 9-9s-4.03-9-9-9z" />
+                        </svg>
+                        Retrieve BTC address
+                    </button>
+                </section>
+                <section>
+                    <h4 class="margin-bottom-1">Check address Details</h4>
+                    <sm-form class="flex" style="--gap: 0.5rem;">
+                        <sm-input type="search" id="check_address_input" placeholder="BTC Address" data-btc-address
+                            error-text="Invalid BTC address" required>
+                            <svg slot="icon" class="icon" xmlns="http://www.w3.org/2000/svg" height="24px"
+                                viewBox="0 0 24 24" width="24px" fill="#000000">
+                                <path d="M0 0h24v24H0V0z" fill="none" />
+                                <path
+                                    d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                            </svg>
+                        </sm-input>
+                        <button id="check_address_button" class="button button--primary cta" style="height: 3.2rem;"
+                            type="submit" disabled>GO</button>
+                    </sm-form>
+                    <div id="address_balance_card" class="flex align-center space-between hidden">
+                        <div class="flex">
+                            <svg class="icon margin-right-0-3" xmlns="http://www.w3.org/2000/svg" height="24px"
+                                viewBox="0 0 24 24" width="24px" fill="#000000">
+                                <path d="M0 0h24v24H0V0z" fill="none" />
+                                <path
+                                    d="M21 7.28V5c0-1.1-.9-2-2-2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-2.28c.59-.35 1-.98 1-1.72V9c0-.74-.41-1.37-1-1.72zM20 9v6h-7V9h7zM5 19V5h14v2h-6c-1.1 0-2 .9-2 2v6c0 1.1.9 2 2 2h6v2H5z" />
+                                <circle cx="16" cy="12" r="1.5" />
+                            </svg>
+                            Balance
+                        </div>
+                        <output id="address_balance" class="amount-shown"></output>
+                    </div>
+                    <div class="flex align-center space-between hidden margin-bottom-1">
+                        <h5>Transactions</h5>
+                        <strip-select id="filter_selector">
+                            <strip-option value="sent" selected>Sent</strip-option>
+                            <strip-option value="received">Received</strip-option>
+                            <strip-option value="all">All</strip-option>
+                        </strip-select>
+                    </div>
+                    <ul id="transactions_list" class="observe-empty-state"></ul>
+                    <div class="empty-state align-self-center text-center">Balance and transactions will appear here
+                    </div>
+                </section>
+            </div>
+            <div id="send" class="page hidden">
+                <sm-form id="send_tx" class="margin-bottom-1-5">
+                    <div class="margin-bottom-0-5">
+                        <div class="flex align-center space-between margin-bottom-0-5">
+                            <h3>Senders</h3>
+                            <button class="button button--small" id="check_balance">Check
+                                Balance</button>
+                        </div>
+                        <div id="sender_container"></div>
+                        <div class="flex align-center balance-wrapper">
+                            <span class="margin-right-0-5">Total balance</span>
+                            <output id="total_balance" class="amount-shown"></output>
+                        </div>
+                        <button id="add_sender" class=" button--small">
+                            <svg class="icon margin-right-0-5" xmlns="http://www.w3.org/2000/svg" height="24px"
+                                viewBox="0 0 24 24" width="24px" fill="#000000">
+                                <path d="M0 0h24v24H0V0z" fill="none" />
+                                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                            </svg>
+                            Add sender
+                        </button>
+                    </div>
+                    <div>
+                        <h3 class="margin-bottom-0-5">Receivers</h3>
+                        <div id="receiver_container"></div>
+                        <button id="add_receiver" class=" button--small">
+                            <svg class="icon margin-right-0-5" xmlns="http://www.w3.org/2000/svg" height="24px"
+                                viewBox="0 0 24 24" width="24px" fill="#000000">
+                                <path d="M0 0h24v24H0V0z" fill="none" />
+                                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                            </svg>
+                            Add receiver</button>
+                    </div>
+                    <div class="grid gap-0-5">
+                        <div class="flex align-center space-between">
+                            <h4>Select fee</h4>
+                            <strip-select id="fees_selector">
+                                <strip-option value="suggested" selected>Suggested</strip-option>
+                                <!-- <strip-option value="optimum">Optimum</strip-option> -->
+                                <strip-option value="custom">Custom</strip-option>
+                            </strip-select>
+                        </div>
+                        <p id="selected_fee_tip">Estimated time of confirmation is 1hr</p>
+                        <sm-input type="number" id="send_fee" placeholder="Fee" min="0.00000001" step="0.00000001"
+                            readonly animate required>
+                            <div class="currency-symbol flex" slot="icon"></div>
+                        </sm-input>
+                    </div>
+                    <div class="multi-state-button">
+                        <button id="send_transaction" type="submit" class="button button--primary cta w-100"
+                            disabled>Send</button>
+                    </div>
+                </sm-form>
+            </div>
+            <div id="convert_key" class="page hidden">
+                <section class="margin-bottom-2 grid gap-1">
+                    <div class="grid gap-0-3">
+                        <h4>Private key convertor</h4>
+                        <p>Convert private key of any blockchain to corresponding BTC address & private key.</p>
+                    </div>
+                    <div class="grid gap-1-5">
+                        <sm-form class="flex align-center">
+                            <sm-input type="password" id="any_private" class="password-field" placeholder="Private key"
+                                required animate>
+                                <label slot="right" class="interact">
+                                    <input type="checkbox" class="hidden" autocomplete="off" readonly
+                                        onchange="togglePrivateKeyVisibility(this)">
+                                    <svg class="icon invisible" xmlns="http://www.w3.org/2000/svg" height="24px"
+                                        viewBox="0 0 24 24" width="24px" fill="#000000">
+                                        <title>Hide password</title>
+                                        <path d="M0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0z" fill="none" />
+                                        <path
+                                            d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
+                                    </svg>
+                                    <svg class="icon visible" xmlns="http://www.w3.org/2000/svg" height="24px"
+                                        viewBox="0 0 24 24" width="24px" fill="#000000">
+                                        <title>Show password</title>
+                                        <path d="M0 0h24v24H0z" fill="none" />
+                                        <path
+                                            d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+                                    </svg>
+                                </label>
+                            </sm-input>
+                            <button type="submit" id="convert_priv_key">Go</button>
+                        </sm-form>
+                        <div class="grid gap-0-5">
+                            <sm-input type="password" id="btc_private" class="password-field"
+                                placeholder="BTC Private key" animate>
+                                <label slot="right" class="interact">
+                                    <input type="checkbox" class="hidden" autocomplete="off" readonly
+                                        onchange="togglePrivateKeyVisibility(this)">
+                                    <svg class="icon invisible" xmlns="http://www.w3.org/2000/svg" height="24px"
+                                        viewBox="0 0 24 24" width="24px" fill="#000000">
+                                        <title>Hide password</title>
+                                        <path d="M0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0z" fill="none" />
+                                        <path
+                                            d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
+                                    </svg>
+                                    <svg class="icon visible" xmlns="http://www.w3.org/2000/svg" height="24px"
+                                        viewBox="0 0 24 24" width="24px" fill="#000000">
+                                        <title>Show password</title>
+                                        <path d="M0 0h24v24H0z" fill="none" />
+                                        <path
+                                            d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+                                    </svg>
+                                </label>
+                            </sm-input>
+                            <sm-input id="priv_key_bech32" placeholder="Address" data-btc-address
+                                error-text="Invalid BTC address" animate required></sm-input>
+                        </div>
+                    </div>
+                </section>
+                <section class="grid gap-1">
+                    <div class="grid gap-0-3">
+                        <h4>Address Convertor</h4>
+                        <p class="panel-footer">Convert address: BTC &#x21D4; FLO</p>
+                    </div>
+                    <div class="grid gap-0-5">
+                        <sm-input id="convert_btc_input" placeholder="BTC Address" data-btc-address
+                            error-text="Invalid BTC address" animate required></sm-input>
+                        <button id="convert_flo_btc" class="button--primary justify-self-center">
+                            <svg class="icon margin-right-0-5" xmlns="http://www.w3.org/2000/svg" height="24px"
+                                viewBox="0 0 24 24" width="24px" fill="#000000">
+                                <path d="M0 0h24v24H0z" fill="none" />
+                                <path d="M16 17.01V10h-2v7.01h-3L15 21l4-3.99h-3zM9 3L5 6.99h3V14h2V6.99h3L9 3z" />
+                            </svg>
+                            Convert
+                        </button>
+                        <sm-input id="convert_flo_input" placeholder="FLO Address" animate></sm-input>
+                        <div class="flex align-center">
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+        <nav id="main_navbar">
+            <ul id="menu">
+                <li>
+                    <a href="#/address_details" class="nav-item interactive">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24"
+                            width="24px" fill="#000000">
+                            <path d="M0 0h24v24H0V0z" fill="none" />
+                            <path d="M12 5.69l5 4.5V18h-2v-6H9v6H7v-7.81l5-4.5M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3z" />
+                        </svg>
+                        <span class="nav-item__title">
+                            Address
+                        </span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#/send" class="nav-item interactive">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24"
+                            width="24px" fill="#000000">
+                            <path d="M0 0h24v24H0V0z" fill="none" />
+                            <path
+                                d="M4.01 6.03l7.51 3.22-7.52-1 .01-2.22m7.5 8.72L4 17.97v-2.22l7.51-1M2.01 3L2 10l15 2-15 2 .01 7L23 12 2.01 3z" />
+                        </svg>
+                        <span class="nav-item__title">
+                            Send
+                        </span></a>
+                </li>
+                <li>
+                    <a href="#/convert_key" class="nav-item interactive">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24"
+                            width="24px" fill="#000000">
+                            <path d="M0 0h24v24H0z" fill="none"></path>
+                            <path d="M16 17.01V10h-2v7.01h-3L15 21l4-3.99h-3zM9 3L5 6.99h3V14h2V6.99h3L9 3z"></path>
+                        </svg>
+                        <span class="nav-item__title">
+                            Convert
+                        </span></a>
+                </li>
             </ul>
-        </div>
-    </nav>
-    <div class="container-fluid">
-        <div name="panels" data-n="1" id="address-gen-panel" class="panel panel-default hide">
-            <div class="panel-heading">Address Generator</div>
-            <div class="panel-body">
-                <form id="generate-address" autocomplete="off">
-                    <div class="form-group">
-                        <label class="radio-inline"><input type="radio" name="gen-radio" value="generate" checked>Generate</label>
-                        <label class="radio-inline"><input type="radio" name="gen-radio" value="retrieve">Retrieve</label>
-                        <button type="button" name="submit" class="btn btn-default">Go</button>
-                    </div>
-                    <div class="input-group">
-                        <span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i>Private</span>
-                        <input type="password" class="form-control" name="private" placeholder="PrivateKey" disabled>
-                        <div class="input-group-btn">
-                            <button class="btn btn-default" name="eye" type="button">
-                                <i class="glyphicon glyphicon-eye-close"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <span class="input-group-addon"><i>Address</i></span>
-                        <input type="text" class="form-control" name="bech32" placeholder="Address" disabled>
-                    </div>
-                    <div class="input-group hide">
-                        <span class="input-group-addon"><i>Segwit</i></span>
-                        <input type="text" class="form-control" name="segwit" placeholder="SegwitAddress" disabled>
-                    </div>
-                    <div class="input-group hide">
-                        <span class="input-group-addon"><i>Legacy</i></span>
-                        <input type="text" class="form-control" name="legacy" placeholder="LegacyAddress" disabled>
-                    </div>
-                </form>
-            </div>
-            <div class="panel-footer"><span>Note: Safely store the <b>Private-Key</b>!</span></div>
-        </div>
-        <div name="panels" data-n="4" id="convert-key-panel" class="panel panel-default hide">
-            <div class="panel-heading">PrivateKey Convertor</div>
-            <div class="panel-body">
-                <form id="convert-key" autocomplete="off">
-                    <div class="form-group">
-                        <div class="input-group">
-                            <span class="input-group-addon">Any Private</span>
-                            <input type="password" class="form-control" name="any-private" placeholder="Any PrivateKey">
-                            <div class="input-group-btn">
-                                <button class="btn btn-default" name="submit" type="button">Go</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <span class="input-group-addon"><i class="glyphicon glyphicon-bitcoin"></i>Private</span>
-                        <input type="password" class="form-control" name="btc-private" placeholder="BTC PrivateKey" disabled>
-                        <div class="input-group-btn">
-                            <button class="btn btn-default" name="eye" type="button">
-                                <i class="glyphicon glyphicon-eye-close"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <span class="input-group-addon"><i>Address</i></span>
-                        <input type="text" class="form-control" name="bech32" placeholder="Address" disabled>
-                    </div>
-                </form>
-            </div>
-            <div class="panel-footer"><i>Convert: any blockchain &#x21d2; BTC</i></div>
-        </div>
-        <div name="panels" data-n="4" id="convert-address-panel" class="panel panel-default hide">
-            <div class="panel-heading">Address Convertor</div>
-            <div class="panel-body">
-                <form id="convert-address">
-                    <div class="input-group">
-                        <span class="input-group-addon"><i>BTC</i></span>
-                        <input type="text" class="form-control" name="btc-bech" placeholder="BTC Address">
-                        <div class="input-group-btn">
-                            <button class="btn btn-default" name="btc2flo" type="button">
-                                <i class="glyphicon glyphicon-arrow-down"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <span class="input-group-addon"><i>FLO</i></span>
-                        <input type="text" class="form-control" name="flo-id" placeholder="FLO Address">
-                        <div class="input-group-btn">
-                            <button class="btn btn-default" name="flo2btc" type="button">
-                                <i class="glyphicon glyphicon-arrow-up"></i>
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="panel-footer"><i>Convert address: BTC &#x21D4; FLO</i></div>
-        </div>
-        <div name="panels" data-n="2" id="send-tx-panel" class="panel panel-default hide">
-            <div class="panel-heading">Send Transaction</div>
-            <div class="panel-body">
-                <form id="send-tx">
-                    <template class="sender-template">
-                        <div class="input-group">
-                            <span class="input-group-addon"><i>Sender</i></span>
-                            <input type="text" class="form-control" name="sender" placeholder="Sender ID">
-                            <span class="input-group-addon"><i class="glyphicon glyphicon-bitcoin"></i></span>
-                            <input type="number" class="form-control" name="balance" placeholder="Balance" disabled>
-                            <span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
-                            <input type="password" class="form-control" name="private" placeholder="PrivateKey">
-                            <div class="input-group-btn">
-                                <button class="btn btn-default" name="rm-sender" type="button">X</button>
-                            </div>
-                        </div>
-                    </template>
-                    <div class="form-group">
-                        <div class="sender-container"></div>
-                        <div class="input-group">
-                            <div class="input-group-btn">
-                                <button class="btn btn-default" name="check-balance" type="button">Check Balance</button>
-                            </div>
-                            <input type="number" class="form-control" name="total_balance" placeholder="Total Balance" disabled>
-                        </div>
-                        <button type="button" name="add-sender" class="btn btn-default"><b>+</b></button>
-                    </div>
-                    <template class="receiver-template">
-                        <div class="input-group">
-                            <span class="input-group-addon"><i>Receiver</i></span>
-                            <input type="text" class="form-control" name="receiver" placeholder="Receiver ID">
-                            <span class="input-group-addon"><i>Amount</i></span>
-                            <input type="number" class="form-control" name="amount" placeholder="Amount" min="0" step="0.01">
-                            <div class="input-group-btn">
-                                <button class="btn btn-default" name="rm-receiver" type="button">X</button>
-                            </div>
-                        </div>
-                    </template>
-                    <div class="form-group">
-                        <div class="receiver-container"></div>
-                        <button type="button" name="add-receiver" class="btn btn-default"><b>+</b></button>
-                    </div>
-                    <div class="input-group">
-                        <span class="input-group-addon"><i>Fee</i></span>
-                        <input type="number" class="form-control" name="fee" placeholder="Fee" min="0" step="0.000001">
-                    </div>
-                    <button type="button" name="submit" class="btn btn-default btn-block"><b>Send</b></button><br />
-                    <div class="input-group">
-                        <span class="input-group-addon"><i>TxID</i></span>
-                        <input type="text" class="form-control" name="txid" placeholder="Transaction ID" disabled>
-                    </div>
-                </form>
-            </div>
-        </div>
-        <div name="panels" data-n="3" id="view-details-panel" class="panel panel-default">
-            <div class="panel-heading">Address Details</div>
-            <div class="panel-body">
-                <form id="address-details">
-                    <div class="input-group">
-                        <span class="input-group-addon"><i>Address</i></span>
-                        <input type="text" class="form-control" name="addr" placeholder="Address">
-                        <div class="input-group-btn">
-                            <button class="btn btn-default" name="submit" type="button"><b class="glyphicon glyphicon-search"></b></button>
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <span class="input-group-addon"><i class="glyphicon glyphicon-bitcoin"></i></span>
-                        <input type="number" class="form-control" name="balance" placeholder="Balance" disabled>
-                    </div>
-                </form>
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th>Address</th>
-                            <th>Amount</th>
-                            <th>Time</th>
-                            <th>TxID</th>
-                        </tr>
-                    </thead>
-                    <tbody id="view-details"></tbody>
-                </table>
-            </div>
-        </div>
+        </nav>
     </div>
+    <sm-popup id="generate_btc_addr_popup">
+        <header slot="header" class="popup__header">
+            <div class="flex align-center">
+                <button class="popup__header__close" onclick="closePopup()">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px"
+                        fill="#000000">
+                        <path d="M0 0h24v24H0V0z" fill="none" />
+                        <path
+                            d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" />
+                    </svg>
+                </button>
+            </div>
+        </header>
+        <div class="grid gap-2">
+            <div id="flo_id_warning" class="grid justify-center gap-0-5">
+                <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px"
+                    fill="#000000">
+                    <path d="M0 0h24v24H0z" fill="none" />
+                    <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+                </svg>
+                <h3>Keep your keys safe!</h3>
+                <strong>Don't share with anyone. Once lost private key can't be
+                    recovered.</strong>
+            </div>
+            <div id="generated_btc_addr" class="generated-id-card"></div>
+        </div>
+    </sm-popup>
+    <sm-popup id="retrieve_btc_addr_popup">
+        <header slot="header" class="popup__header">
+            <div class="flex align-center">
+                <button class="popup__header__close" onclick="closePopup()">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px"
+                        fill="#000000">
+                        <path d="M0 0h24v24H0V0z" fill="none" />
+                        <path
+                            d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" />
+                    </svg>
+                </button>
+            </div>
+        </header>
+        <section class="grid gap-1-5">
+            <div class="grid gap-0-5">
+                <h4>Forgot BTC address?</h4>
+                <p>In case of BTC address being lost and you have the private key associated with it. You can recover
+                    it.</p>
+            </div>
+            <sm-form>
+                <div id="recovered_btc_addr_wrapper" class="hidden">
+                    <h5>Recovered BTC address</h5>
+                    <sm-copy id="recovered_btc_addr"></sm-copy>
+                </div>
+                <sm-input id="retrieve_btc_addr_field" type="password" error-text="Invalid private key"
+                    placeholder="Private key" class="password-field" required autofocus>
+                    <label slot="right" class="interact">
+                        <input type="checkbox" class="hidden" autocomplete="off" readonly
+                            onchange="togglePrivateKeyVisibility(this)">
+                        <svg class="icon invisible" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24"
+                            width="24px" fill="#000000">
+                            <title>Hide password</title>
+                            <path d="M0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0z" fill="none" />
+                            <path
+                                d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
+                        </svg>
+                        <svg class="icon visible" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24"
+                            width="24px" fill="#000000">
+                            <title>Show password</title>
+                            <path d="M0 0h24v24H0z" fill="none" />
+                            <path
+                                d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+                        </svg>
+                    </label>
+                </sm-input>
+                <button class="button button--primary cta" type="submit" onclick="retrieveBtcAddr()">Recover</button>
+            </sm-form>
+        </section>
+    </sm-popup>
+    <sm-popup id="txid_popup">
+        <header slot="header" class="popup__header">
+            <div class="flex align-center">
+                <button class="popup__header__close" onclick="closePopup()">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px"
+                        fill="#000000">
+                        <path d="M0 0h24v24H0V0z" fill="none" />
+                        <path
+                            d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" />
+                    </svg>
+                </button>
+            </div>
+        </header>
+        <div class="grid gap-0-5 justify-center text-center">
+            <svg class="icon user-action-result__icon success" xmlns="http://www.w3.org/2000/svg" height="24px"
+                viewBox="0 0 24 24" width="24px" fill="#000000">
+                <path d="M0 0h24v24H0V0z" fill="none" />
+                <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z" />
+            </svg>
+            <h4>Transaction sent</h4>
+            <sm-copy id="txid"></sm-copy>
+        </div>
+    </sm-popup>
+    <template id="transaction_template">
+        <li>
+            <div class="wallet-request__icon"></div>
+            <div class="flex align-center space-between">
+                <div class="wallet-request__details"></div>
+                <div class="wallet-request__amount"></div>
+            </div>
+            <div class="flex align-center space-between">
+                <time class="wallet-request__time"></time>
+                <div class="wallet-request__status flex align-center"></div>
+            </div>
+        </li>
+    </template>
+    <template id="sender_template">
+        <fieldset class="sender-card card">
+            <sm-input class="sender-input" placeholder="Sender address" data-btc-address
+                error-text="Invalid BTC address" animate required></sm-input>
+            <sm-input class="priv-key-input password-field" type="password" placeholder="Private Key" animate required>
+                <svg class="icon" slot="icon" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24"
+                    height="24px" viewBox="0 0 24 24" width="24px" fill="#000000">
+                    <g>
+                        <rect fill="none" height="24" width="24" />
+                    </g>
+                    <g>
+                        <path
+                            d="M21,10h-8.35C11.83,7.67,9.61,6,7,6c-3.31,0-6,2.69-6,6s2.69,6,6,6c2.61,0,4.83-1.67,5.65-4H13l2,2l2-2l2,2l4-4.04L21,10z M7,15c-1.65,0-3-1.35-3-3c0-1.65,1.35-3,3-3s3,1.35,3,3C10,13.65,8.65,15,7,15z" />
+                    </g>
+                </svg>
+                <label slot="right" class="interact">
+                    <input type="checkbox" class="hidden" autocomplete="off" readonly
+                        onchange="togglePrivateKeyVisibility(this)">
+                    <svg class="icon invisible" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24"
+                        width="24px" fill="#000000">
+                        <title>Hide password</title>
+                        <path d="M0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0z" fill="none" />
+                        <path
+                            d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
+                    </svg>
+                    <svg class="icon visible" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24"
+                        width="24px" fill="#000000">
+                        <title>Show password</title>
+                        <path d="M0 0h24v24H0z" fill="none" />
+                        <path
+                            d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+                    </svg>
+                </label>
+            </sm-input>
+            <div class="flex align-center space-between full-bleed  remove-card-wrapper">
+                <div class="flex align-center">
+                    <svg class="icon margin-right-0-3" xmlns="http://www.w3.org/2000/svg" height="24px"
+                        viewBox="0 0 24 24" width="24px" fill="#000000">
+                        <path d="M0 0h24v24H0V0z" fill="none" />
+                        <path
+                            d="M21 7.28V5c0-1.1-.9-2-2-2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-2.28c.59-.35 1-.98 1-1.72V9c0-.74-.41-1.37-1-1.72zM20 9v6h-7V9h7zM5 19V5h14v2h-6c-1.1 0-2 .9-2 2v6c0 1.1.9 2 2 2h6v2H5z" />
+                        <circle cx="16" cy="12" r="1.5" />
+                    </svg>
+                    <output class="sender-balance amount-shown flex align-center">Balance</output>
+                </div>
+                <button class="remove-card button--small">
+                    <svg class="icon margin-right-0-3" xmlns="http://www.w3.org/2000/svg" height="24px"
+                        viewBox="0 0 24 24" width="24px" fill="#000000">
+                        <path d="M0 0h24v24H0V0z" fill="none" />
+                        <path
+                            d="M7 11v2h10v-2H7zm5-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
+                    </svg>
+                    Remove
+                </button>
+            </div>
+        </fieldset>
+    </template>
+    <template id="receiver_template">
+        <fieldset class="card receiver-card">
+            <sm-input class="receiver-input" placeholder="Receiver address" data-btc-address
+                error-text="Invalid BTC address" animate required></sm-input>
+            <div class="flex align-start gap-0-5 remove-card-wrapper">
+                <sm-input type="number" class="amount-input" placeholder="Amount" min="0.0000001" step="0.00000001"
+                    error-text="Invalid amount" animate required>
+                    <div class="currency-symbol flex" slot="icon"></div>
+                </sm-input>
+                <button class="remove-card button--small">
+                    <svg class="icon margin-right-0-3" xmlns="http://www.w3.org/2000/svg" height="24px"
+                        viewBox="0 0 24 24" width="24px" fill="#000000">
+                        <path d="M0 0h24v24H0V0z" fill="none" />
+                        <path
+                            d="M7 11v2h10v-2H7zm5-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
+                    </svg>
+                    Remove
+                </button>
+            </div>
+        </fieldset>
+    </template>
+    <script id="ui_utils">
+        const { html, svg, render: renderElem } = uhtml;
+        const domRefs = {}
+        //Checks for internet connection status
+        if (!navigator.onLine)
+            notify('There seems to be a problem connecting to the internet, Please check you internet connection.', 'error', '', true)
+        window.addEventListener('offline', () => {
+            notify('There seems to be a problem connecting to the internet, Please check you internet connection.', 'error', true, true)
+        })
+        window.addEventListener('online', () => {
+            getRef('notification_drawer').clearAll()
+            notify('We are back online.', 'success')
+        })
 
-
-
-</body>
-<script>
-    (function() {
-
-        let menu = document.getElementById('menu').children;
-        let panels = document.getElementsByName('panels');
-        for (let i = 0; i < menu.length; i++) {
-            menu[i].onclick = evt => {
-                let n = evt.target.parentElement.dataset.n;
-                for (let j = 0; j < menu.length; j++)
-                    if (menu[j].dataset.n == n)
-                        menu[j].classList.add('active');
-                    else
-                        menu[j].classList.remove('active');
-                for (let p = 0; p < panels.length; p++)
-                    if (panels[p].dataset.n == n)
-                        panels[p].classList.remove('hide');
-                    else
-                        panels[p].classList.add('hide');
+        // Use instead of document.getElementById
+        function getRef(elementId) {
+            if (!domRefs.hasOwnProperty(elementId)) {
+                domRefs[elementId] = {
+                    count: 1,
+                    ref: null,
+                };
+                return document.getElementById(elementId);
+            } else {
+                if (domRefs[elementId].count < 3) {
+                    domRefs[elementId].count = domRefs[elementId].count + 1;
+                    return document.getElementById(elementId);
+                } else {
+                    if (!domRefs[elementId].ref)
+                        domRefs[elementId].ref = document.getElementById(elementId);
+                    return domRefs[elementId].ref;
+                }
             }
         }
-
-        let addressForm = document.forms['generate-address'];
-        for (let i = 0; i < addressForm['gen-radio'].length; i++)
-            addressForm['gen-radio'][i].addEventListener('change', evt => addressForm['private'].disabled = evt.target.value === "generate");
-        addressForm['eye'].onclick = evt => {
-            if (addressForm['private'].type === "password")
-                addressForm['private'].type = "text";
-            else
-                addressForm['private'].type = "password";
+        // Use when a function needs to be executed after user finishes changes
+        const debounce = (callback, wait) => {
+            let timeoutId = null;
+            return (...args) => {
+                window.clearTimeout(timeoutId);
+                timeoutId = window.setTimeout(() => {
+                    callback.apply(null, args);
+                }, wait);
+            };
         }
-        addressForm['submit'].onclick = evt => {
-            switch (addressForm['gen-radio'].value) {
-                case "generate": {
-                    let newKeys = btc_api.newKeys;
-                    addressForm['private'].value = newKeys.wif;
-                    addressForm['legacy'].value = newKeys.address;
-                    addressForm['segwit'].value = newKeys.segwitAddress;
-                    addressForm['bech32'].value = newKeys.bech32Address;
-                    break;
-                }
-                case "retrieve": {
-                    let wif = addressForm['private'].value;
-                    addressForm['legacy'].value = btc_api.address(wif);
-                    addressForm['segwit'].value = btc_api.segwitAddress(wif);
-                    addressForm['bech32'].value = btc_api.bech32Address(wif);
-                    break;
-                }
-            }
+        // adds a class to all elements in an array
+        function addClass(elements, className) {
+            elements.forEach((element) => {
+                document.querySelector(element).classList.add(className);
+            });
+        }
+        // removes a class from all elements in an array
+        function removeClass(elements, className) {
+            elements.forEach((element) => {
+                document.querySelector(element).classList.remove(className);
+            });
+        }
+        // return querySelectorAll elements as an array
+        function getAllElements(selector) {
+            return Array.from(document.querySelectorAll(selector));
         }
 
-        let convertForm1 = document.forms['convert-key'];
-        convertForm1['eye'].onclick = evt => {
-            if (convertForm1['btc-private'].type === "password")
-                convertForm1['btc-private'].type = "text";
-            else
-                convertForm1['btc-private'].type = "password";
-        }
-        convertForm1['submit'].onclick = evt => {
-            let source_wif = convertForm1['any-private'].value;
-            let btc_wif = btc_api.convert.wif(source_wif);
-            convertForm1['btc-private'].value = btc_wif;
-            convertForm1['bech32'].value = btc_api.bech32Address(btc_wif);
-        }
-        let convertForm2 = document.forms['convert-address'];
-        convertForm2['flo2btc'].onclick = evt => {
-            let flo_addr = convertForm2['flo-id'].value;
-            convertForm2['btc-bech'].value = '';
-            convertForm2['btc-bech'].value = btc_api.convert.legacy2bech(flo_addr);
-        }
-        convertForm2['btc2flo'].onclick = evt => {
-            let btc_bech = convertForm2['btc-bech'].value;
-            convertForm2['flo-id'].value = '';
-            convertForm2['flo-id'].value = btc_api.convert.bech2legacy(btc_bech, 0x23);
+        let zIndex = 50
+        // function required for popups or modals to appear
+        function openPopup(popupId, pinned) {
+            zIndex++
+            getRef(popupId).setAttribute('style', `z-index: ${zIndex}`)
+            getRef(popupId).show({ pinned })
+            return getRef(popupId);
         }
 
-        let sendForm = document.forms['send-tx'];
-        let sender_template = sendForm.getElementsByClassName('sender-template')[0],
-            sender_container = sendForm.getElementsByClassName('sender-container')[0];
-        sendForm['add-sender'].onclick = evt => {
-            sender_container.appendChild(sender_template.content.cloneNode(true));
-            let clone = sender_container.lastElementChild;
-            clone.getElementsByTagName("button")[0].onclick = evt => sender_container.removeChild(clone);
-        }
-        sendForm['add-sender'].click();
-        sendForm['check-balance'].onclick = evt => {
-            sendForm["total_balance"].value = 0;
-            let addresses = [],
-                total_balance = 0;
-            if (!sendForm["sender"])
+        // hides the popup or modal
+        function closePopup() {
+            if (popupStack.peek() === undefined)
                 return;
-            else if (sendForm["sender"] instanceof RadioNodeList)
-                for (let i = 0; i < sendForm["sender"].length; i++)
-                    addresses.push(sendForm["sender"][i].value);
-            else
-                addresses.push(sendForm["sender"].value);
-            console.debug(addresses);
-            let balance_inputs = sendForm["balance"] instanceof RadioNodeList ? sendForm["balance"] : [sendForm["balance"]];
-            //sendForm['check-balance'].disabled = true;
-            addresses.forEach((addr, i) => btc_api.getBalance(addr).then(result => {
-                console.debug(addr, result)
-                balance_inputs[i].value = result;
-                sendForm["total_balance"].value = parseFloat(sendForm["total_balance"].value) + result;
-            }).catch(error => console.error(error)))
-            //  .finally(_ => sendForm['check-balance'].disabled = false)
-        }
-        let receiver_template = sendForm.getElementsByClassName('receiver-template')[0],
-            receiver_container = sendForm.getElementsByClassName('receiver-container')[0];
-        sendForm['add-receiver'].onclick = evt => {
-            receiver_container.appendChild(receiver_template.content.cloneNode(true));
-            let clone = receiver_container.lastElementChild;
-            clone.getElementsByTagName("button")[0].onclick = evt => receiver_container.removeChild(clone);
-        }
-        sendForm['add-receiver'].click();
-        sendForm['submit'].onclick = evt => {
-            //clear result box
-            sendForm['txid'].value = 'Processing';
-            sendForm['txid'].parentElement.classList.remove('has-error');
-            sendForm['txid'].parentElement.classList.remove('has-success');
-            let senders = [],
-                privkeys = [],
-                receivers = [],
-                amounts = [],
-                fee = parseFloat(sendForm["fee"].value);
-            //inputs (senders)
-            if (!sendForm["sender"]) {
-                sendForm['txid'].value = 'Sender cannot be empty';
-                sendForm['txid'].parentElement.classList.add('has-error');
-                return console.warn("sender cannot be empty");
-            } else if (sendForm["sender"] instanceof RadioNodeList)
-                for (let i = 0; i < sendForm["sender"].length; i++) {
-                    senders.push(sendForm["sender"][i].value);
-                    privkeys.push(sendForm["private"][i].value);
-                }
-            else {
-                senders.push(sendForm["sender"].value);
-                privkeys.push(sendForm["private"].value);
-            }
-            //outputs (receivers and amounts)    
-            if (!sendForm["receiver"]) {
-                sendForm['txid'].value = 'Receiver cannot be empty';
-                sendForm['txid'].parentElement.classList.add('has-error');
-                return console.warn("receiver cannot be empty");
-            } else if (sendForm["receiver"] instanceof RadioNodeList)
-                for (let i = 0; i < sendForm["receiver"].length; i++) {
-                    receivers.push(sendForm["receiver"][i].value);
-                    amounts.push(parseFloat(sendForm["amount"][i].value));
-                }
-            else {
-                receivers.push(sendForm["receiver"].value);
-                amounts.push(parseFloat(sendForm["amount"].value));
-            }
-            console.debug(senders, receivers, amounts, fee);
-            sendForm['submit'].disabled = true;
-            btc_api.sendTx(senders, privkeys, receivers, amounts, fee).then(result => {
-                console.log(result);
-                sendForm['txid'].value = result.txid;
-                sendForm['txid'].parentElement.classList.add('has-success');
-            }).catch(error => {
-                console.error(error);
-                sendForm['txid'].value = error;
-                sendForm['txid'].parentElement.classList.add('has-error');
-            }).finally(_ => sendForm['submit'].disabled = false)
+            popupStack.peek().popup.hide()
         }
 
-        let detailsForm = document.forms['address-details'];
-        detailsForm['submit'].onclick = evt => {
-            detailsForm['submit'].disabled = true;
-            let address = detailsForm['addr'].value;
-            let table = document.getElementById("view-details");
-            table.innerHTML = '';
-            detailsForm['balance'].value = '';
-            getAddressDetails(address).then(result => {
-                console.debug(result);
-                detailsForm['balance'].value = result.balance;
-                result.txs.forEach(tx => {
-                    let row = table.insertRow();
-                    if (tx.type === "out") {
-                        row.insertCell().innerHTML = '&#8599;';
-                        row.insertCell().innerHTML = tx.receiver.join('<br/>');
-                    } else if (tx.type === "in") {
-                        row.insertCell().innerHTML = '&#8601;';
-                        row.insertCell().innerHTML = tx.sender.join('<br/>');
-                    } else if (tx.type === "self") {
-                        row.insertCell().innerHTML = '&#10226';
-                        row.insertCell().textContent = tx.address;
-                    }
-                    row.insertCell().textContent = tx.amount;
-                    row.insertCell().textContent = tx.time;
-                    row.insertCell().textContent = tx.txid;
-                    if (tx.block === null)
-                        row.className = 'unconfirmed-tx';
-                });
-            }).catch(error => console.error(error)).finally(_ => detailsForm['submit'].disabled = false)
+        document.addEventListener('popupopened', e => {
+            switch (e.target.id) {
+                case 'edit_sections_popup':
+                    break;
+            }
+        })
+        document.addEventListener('popupclosed', e => {
+            zIndex--
+            switch (e.target.id) {
+                case 'retrieve_btc_addr_popup':
+                    getRef('recovered_btc_addr_wrapper').classList.add('hidden')
+                    break;
+            }
+        })
+
+        // displays a popup for asking permission. Use this instead of JS confirm
+        const getConfirmation = (title, options = {}) => {
+            return new Promise(resolve => {
+                const { message = '', cancelText = 'Cancel', confirmText = 'OK' } = options
+                openPopup('confirmation_popup', true)
+                getRef('confirm_title').innerText = title;
+                getRef('confirm_message').innerText = message;
+                let cancelButton = getRef('confirmation_popup').children[2].children[0],
+                    submitButton = getRef('confirmation_popup').children[2].children[1]
+                submitButton.textContent = confirmText
+                cancelButton.textContent = cancelText
+                submitButton.onclick = () => {
+                    closePopup()
+                    resolve(true);
+                }
+                cancelButton.onclick = () => {
+                    closePopup()
+                    resolve(false);
+                }
+            })
         }
+
+        //Function for displaying toast notifications. pass in error for mode param if you want to show an error.
+        function notify(message, mode, options = {}) {
+            let icon
+            switch (mode) {
+                case 'success':
+                    icon = `<svg class="icon icon--success" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z"/></svg>`
+                    break;
+                case 'error':
+                    icon = `<svg class="icon icon--error" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm-1-7v2h2v-2h-2zm0-8v6h2V7h-2z"/></svg>`
+                    break;
+            }
+            getRef("notification_drawer").push(message, { icon, ...options });
+            if (mode === 'error') {
+                console.error(message)
+            }
+        }
+
+        function getFormattedTime(timestamp, format) {
+            try {
+                if (String(timestamp).length < 13)
+                    timestamp *= 1000
+                let [day, month, date, year] = new Date(timestamp).toString().split(' '),
+                    minutes = new Date(timestamp).getMinutes(),
+                    hours = new Date(timestamp).getHours(),
+                    currentTime = new Date().toString().split(' ')
+
+                minutes = minutes < 10 ? `0${minutes}` : minutes
+                let finalHours = ``;
+                if (hours > 12)
+                    finalHours = `${hours - 12}:${minutes}`
+                else if (hours === 0)
+                    finalHours = `12:${minutes}`
+                else
+                    finalHours = `${hours}:${minutes}`
+
+                finalHours = hours >= 12 ? `${finalHours} PM` : `${finalHours} AM`
+                switch (format) {
+                    case 'date-only':
+                        return `${month} ${date}, ${year}`;
+                        break;
+                    case 'time-only':
+                        return finalHours;
+                    case 'relative':
+                        // check if timestamp is older than a day
+                        if (Date.now() - new Date(timestamp) < 60 * 60 * 24 * 1000)
+                            return `${finalHours}`;
+                        else
+                            return relativeTime.from(timestamp)
+                    default:
+                        return `${month} ${date}, ${year} at ${finalHours}`;
+                }
+            } catch (e) {
+                console.error(e);
+                return timestamp;
+            }
+        }
+        // returns dom with specified element
+        function createElement(tagName, options = {}) {
+            const { className, textContent, innerHTML, attributes = {} } = options
+            const elem = document.createElement(tagName)
+            for (let attribute in attributes) {
+                elem.setAttribute(attribute, attributes[attribute])
+            }
+            if (className)
+                elem.className = className
+            if (textContent)
+                elem.textContent = textContent
+            if (innerHTML)
+                elem.innerHTML = innerHTML
+            return elem
+        }
+
+        window.addEventListener('hashchange', e => showPage(window.location.hash))
+        window.addEventListener("load", () => {
+            document.body.classList.remove('hidden')
+            document.querySelectorAll('sm-input[data-btc-address]').forEach(input => input.customValidation = btc_api.validateAddress)
+            document.addEventListener('keyup', (e) => {
+                if (e.key === 'Escape') {
+                    closePopup()
+                }
+            })
+            document.addEventListener('copy', () => {
+                notify('copied', 'success')
+            })
+            document.addEventListener("pointerdown", (e) => {
+                if (e.target.closest("button, sm-button:not([disabled]), .interactive")) {
+                    createRipple(e, e.target.closest("button, sm-button, .interactive"));
+                }
+            });
+            showPage(window.location.hash)
+            const selectedCurrency = localStorage.getItem('btc-wallet-currency') || 'btc'
+            getRef('currency_selector').value = selectedCurrency
+            getRef('add_sender').click();
+            getRef('add_receiver').click();
+            document.querySelectorAll('.currency-symbol').forEach(el => el.innerHTML = currencyIcons[selectedCurrency])
+
+        });
+        function createRipple(event, target) {
+            const circle = document.createElement("span");
+            const diameter = Math.max(target.clientWidth, target.clientHeight);
+            const radius = diameter / 2;
+            const targetDimensions = target.getBoundingClientRect();
+            circle.style.width = circle.style.height = `${diameter}px`;
+            circle.style.left = `${event.clientX - (targetDimensions.left + radius)}px`;
+            circle.style.top = `${event.clientY - (targetDimensions.top + radius)}px`;
+            circle.classList.add("ripple");
+            const rippleAnimation = circle.animate(
+                [
+                    {
+                        transform: "scale(4)",
+                        opacity: 0,
+                    },
+                ],
+                {
+                    duration: 600,
+                    fill: "forwards",
+                    easing: "ease-out",
+                }
+            );
+            target.append(circle);
+            rippleAnimation.onfinish = () => {
+                circle.remove();
+            };
+        }
+
+        const pagesData = {
+            params: {}
+        }
+
+        let tempData
+        async function showPage(targetPage, options = {}) {
+            const { firstLoad, hashChange, isPreview } = options
+            let pageId
+            let params = {}
+            let searchParams
+            if (targetPage === '') {
+                pageId = 'address_details'
+            } else {
+                if (targetPage.includes('/')) {
+                    if (targetPage.includes('?')) {
+                        const splitAddress = targetPage.split('?')
+                        searchParams = splitAddress.pop()
+                        const pages = splitAddress.pop().split('/')
+                        pageId = pages[1]
+                        subPageId = pages[2]
+                    } else {
+                        const pages = targetPage.split('/')
+                        pageId = pages[1]
+                        subPageId = pages[2]
+                    }
+                } else {
+                    pageId = targetPage
+                }
+            }
+            if (searchParams) {
+                const urlSearchParams = new URLSearchParams('?' + searchParams);
+                params = Object.fromEntries(urlSearchParams.entries());
+            }
+            if (pagesData.lastPage !== pageId) {
+                pagesData.lastPage = pageId
+            }
+            if (params)
+                pagesData.params = params
+            switch (pageId) {
+                case 'send':
+                    getExchangeRate().then(() => {
+                        calculateFee()
+                    }).catch(e => {
+                        console.error(e)
+                    })
+                    break;
+            }
+            const animOptions = {
+                duration: 100,
+                fill: 'forwards',
+            }
+            let previousActiveElement = getRef('main_navbar').querySelector('.nav-item--active')
+            const currentActiveElement = document.querySelector(`.nav-item[href="#/${pageId}"]`)
+            if (currentActiveElement) {
+                if (getRef('main_navbar').classList.contains('hidden')) {
+                    getRef('main_navbar').classList.remove('hide-away')
+                    getRef('main_navbar').classList.remove('hidden')
+                    getRef('main_navbar').animate([
+                        {
+                            transform: isMobileView ? `translateY(100%)` : `translateX(-100%)`,
+                            opacity: 0,
+                        },
+                        {
+                            transform: `none`,
+                            opacity: 1,
+                        },
+                    ], {
+                        duration: 100,
+                        fill: 'forwards',
+                        easing: 'ease'
+                    })
+                }
+                getRef('main_header').classList.remove('hidden')
+                const previousActiveElementIndex = [...getRef('main_navbar').querySelectorAll('.nav-item')].indexOf(previousActiveElement)
+                const currentActiveElementIndex = [...getRef('main_navbar').querySelectorAll('.nav-item')].indexOf(currentActiveElement)
+                const isOnTop = previousActiveElementIndex < currentActiveElementIndex
+                const currentIndicator = createElement('div', { className: 'nav-item__indicator' });
+                let previousIndicator = getRef('main_navbar').querySelector('.nav-item__indicator')
+                if (!previousIndicator) {
+                    previousIndicator = currentIndicator.cloneNode(true)
+                    previousActiveElement = currentActiveElement
+                    previousActiveElement.append(previousIndicator)
+                } else if (currentActiveElementIndex !== previousActiveElementIndex) {
+                    const indicatorDimensions = previousIndicator.getBoundingClientRect()
+                    const currentActiveElementDimensions = currentActiveElement.getBoundingClientRect()
+                    let moveBy
+                    if (isMobileView) {
+                        moveBy = ((currentActiveElementDimensions.width - indicatorDimensions.width) / 2) + indicatorDimensions.width
+                    } else {
+                        moveBy = ((currentActiveElementDimensions.height - indicatorDimensions.height) / 2) + indicatorDimensions.height
+                    }
+                    indicatorObserver.observe(previousIndicator)
+                    previousIndicator.animate([
+                        {
+                            transform: 'none',
+                            opacity: 1,
+                        },
+                        {
+                            transform: `translate${isMobileView ? 'X' : 'Y'}(${isOnTop ? `${moveBy}px` : `-${moveBy}px`})`,
+                            opacity: 0,
+                        },
+                    ], { ...animOptions, easing: 'ease-in' }).onfinish = () => {
+                        previousIndicator.remove()
+                    }
+                    tempData = {
+                        currentActiveElement,
+                        currentIndicator,
+                        isOnTop,
+                        animOptions,
+                        moveBy
+                    }
+                }
+                previousActiveElement.classList.remove('nav-item--active');
+                currentActiveElement.classList.add('nav-item--active')
+            } else {
+                if (!getRef('main_navbar').classList.contains('hidden')) {
+                    getRef('main_navbar').classList.add('hide-away')
+                    getRef('main_navbar').animate([
+                        {
+                            transform: `none`,
+                            opacity: 1,
+                        },
+                        {
+                            transform: isMobileView ? `translateY(100%)` : `translateX(-100%)`,
+                            opacity: 0,
+                        },
+                    ], {
+                        duration: 200,
+                        fill: 'forwards',
+                        easing: 'ease'
+                    }).onfinish = () => {
+                        getRef('main_navbar').classList.add('hidden')
+                    }
+                    getRef('main_header').classList.add('hidden')
+                }
+            }
+            document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'))
+            getRef(pageId).classList.remove('hidden')
+            getRef(pageId).animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300, fill: 'forwards', easing: 'ease' })
+        }
+
+        const indicatorObserver = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (!entry.isIntersecting) {
+                    const { currentActiveElement, currentIndicator, isOnTop, animOptions, moveBy } = tempData
+                    currentActiveElement.append(currentIndicator)
+                    currentIndicator.animate([
+                        {
+                            transform: `translate${isMobileView ? 'X' : 'Y'}(${isOnTop ? `-${moveBy}px` : `${moveBy}px`})`,
+                            opacity: 0,
+                        },
+                        {
+                            transform: 'none',
+                            opacity: 1
+                        },
+                    ], { ...animOptions, easing: 'ease-out' })
+                }
+            })
+        }, {
+            threshold: 1
+        })
+        // class based lazy loading
+        class LazyLoader {
+            constructor(container, elementsToRender, renderFn, options = {}) {
+                const { batchSize = 10, freshRender, bottomFirst = false, domUpdated } = options
+
+                this.elementsToRender = elementsToRender
+                this.arrayOfElements = (typeof elementsToRender === 'function') ? this.elementsToRender() : elementsToRender || []
+                this.renderFn = renderFn
+                this.intersectionObserver
+
+                this.batchSize = batchSize
+                this.freshRender = freshRender
+                this.domUpdated = domUpdated
+                this.bottomFirst = bottomFirst
+
+                this.shouldLazyLoad = false
+                this.lastScrollTop = 0
+                this.lastScrollHeight = 0
+
+                this.lazyContainer = document.querySelector(container)
+
+                this.update = this.update.bind(this)
+                this.render = this.render.bind(this)
+                this.init = this.init.bind(this)
+                this.clear = this.clear.bind(this)
+            }
+            get elements() {
+                return this.arrayOfElements
+            }
+            init() {
+                this.intersectionObserver = new IntersectionObserver((entries, observer) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            observer.disconnect()
+                            this.render({ lazyLoad: true })
+                        }
+                    })
+                })
+                this.mutationObserver = new MutationObserver(mutationList => {
+                    mutationList.forEach(mutation => {
+                        if (mutation.type === 'childList') {
+                            if (mutation.addedNodes.length) {
+                                if (this.bottomFirst) {
+                                    if (this.lazyContainer.firstElementChild)
+                                        this.intersectionObserver.observe(this.lazyContainer.firstElementChild)
+                                } else {
+                                    if (this.lazyContainer.lastElementChild)
+                                        this.intersectionObserver.observe(this.lazyContainer.lastElementChild)
+                                }
+                            }
+                        }
+                    })
+                })
+                this.mutationObserver.observe(this.lazyContainer, {
+                    childList: true,
+                })
+                this.render()
+            }
+            update(elementsToRender) {
+                this.arrayOfElements = (typeof elementsToRender === 'function') ? this.elementsToRender() : elementsToRender || []
+            }
+            render(options = {}) {
+                let { lazyLoad = false } = options
+                this.shouldLazyLoad = lazyLoad
+                const frag = document.createDocumentFragment();
+                if (lazyLoad) {
+                    if (this.bottomFirst) {
+                        this.updateEndIndex = this.updateStartIndex
+                        this.updateStartIndex = this.updateEndIndex - this.batchSize
+                    } else {
+                        this.updateStartIndex = this.updateEndIndex
+                        this.updateEndIndex = this.updateEndIndex + this.batchSize
+                    }
+                } else {
+                    this.intersectionObserver.disconnect()
+                    if (this.bottomFirst) {
+                        this.updateEndIndex = this.arrayOfElements.length
+                        this.updateStartIndex = this.updateEndIndex - this.batchSize - 1
+                    } else {
+                        this.updateStartIndex = 0
+                        this.updateEndIndex = this.batchSize
+                    }
+                    this.lazyContainer.innerHTML = ``;
+                }
+                this.lastScrollHeight = this.lazyContainer.scrollHeight
+                this.lastScrollTop = this.lazyContainer.scrollTop
+                this.arrayOfElements.slice(this.updateStartIndex, this.updateEndIndex).forEach((element, index) => {
+                    frag.append(this.renderFn(element))
+                })
+                if (this.bottomFirst) {
+                    this.lazyContainer.prepend(frag)
+                    // scroll anchoring for reverse scrolling
+                    this.lastScrollTop += this.lazyContainer.scrollHeight - this.lastScrollHeight
+                    this.lazyContainer.scrollTo({ top: this.lastScrollTop })
+                    this.lastScrollHeight = this.lazyContainer.scrollHeight
+                } else {
+                    this.lazyContainer.append(frag)
+                }
+                if (!lazyLoad && this.bottomFirst) {
+                    this.lazyContainer.scrollTop = this.lazyContainer.scrollHeight
+                }
+                // Callback to be called if elements are updated or rendered for first time
+                if (!lazyLoad && this.freshRender)
+                    this.freshRender()
+            }
+            clear() {
+                this.intersectionObserver.disconnect()
+                this.mutationObserver.disconnect()
+                this.lazyContainer.innerHTML = ``;
+            }
+            reset() {
+                this.arrayOfElements = (typeof this.elementsToRender === 'function') ? this.elementsToRender() : this.elementsToRender || []
+                this.render()
+            }
+        }
+
+        function buttonLoader(id, show) {
+            const button = typeof id === 'string' ? getRef(id) : id;
+            button.disabled = show;
+            const animOptions = {
+                duration: 200,
+                fill: 'forwards',
+                easing: 'ease'
+            }
+            if (show) {
+                button.animate([
+                    {
+                        clipPath: 'circle(100%)',
+                    },
+                    {
+                        clipPath: 'circle(0)',
+                    },
+                ], animOptions).onfinish = e => {
+                    e.target.commitStyles()
+                    e.target.cancel()
+                }
+                button.parentNode.append(createElement('sm-spinner'))
+            } else {
+                button.style = ''
+                const potentialTarget = button.parentNode.querySelector('sm-spinner')
+                if (potentialTarget) potentialTarget.remove();
+            }
+        }
+        let isMobileView = false
+        const mobileQuery = window.matchMedia('(max-width: 40rem)')
+        function handleMobileChange(e) {
+            isMobileView = e.matches
+        }
+        mobileQuery.addEventListener('change', handleMobileChange)
+
+        handleMobileChange(mobileQuery)
+        function showChildElement(id, index, options = {}) {
+            const { mobileView = false, entry, exit } = options
+            const animOptions = {
+                duration: 150,
+                easing: 'ease',
+                fill: 'forwards'
+            }
+            const visibleElement = [...getRef(id).children].find(elem => !elem.classList.contains(mobileView ? 'hide-on-mobile' : 'hidden'));
+            if (visibleElement === getRef(id).children[index]) return;
+            if (visibleElement) {
+                if (exit) {
+                    visibleElement.animate(exit, animOptions).onfinish = () => {
+                        visibleElement.classList.add(mobileView ? 'hide-on-mobile' : 'hidden')
+                        getRef(id).children[index].classList.remove(mobileView ? 'hide-on-mobile' : 'hidden')
+                        if (entry)
+                            getRef(id).children[index].animate(entry, animOptions)
+                    }
+                } else {
+                    visibleElement.classList.add(mobileView ? 'hide-on-mobile' : 'hidden')
+                    getRef(id).children[index].classList.remove(mobileView ? 'hide-on-mobile' : 'hidden')
+                }
+            } else {
+                getRef(id).children[index].classList.remove(mobileView ? 'hide-on-mobile' : 'hidden')
+                getRef(id).children[index].animate(entry, animOptions)
+            }
+        }
+    </script>
+    <script>
+        let transactionsLazyLoader
+        const render = {
+            transactionCard(transactionDetails) {
+                const { address, amount, time, txid, sender, receiver, type, block } = transactionDetails;
+                let transactionReceiver
+                let icon
+                if (type === 'out') {
+                    transactionReceiver = `Sent to ${receiver}`;
+                    icon = svg`<svg class="icon sent" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/></svg>`;
+                } else if (type === 'in') {
+                    transactionReceiver = `Received from ${sender}`;
+                    icon = svg`<svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z"/></svg>`;
+                } else if (type === 'self') {
+                    transactionReceiver = `Sent to self`;
+                    icon = svg`<svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z"/></svg>`;
+                }
+                const className = `transaction grid ${type} ${block === null ? 'unconfirmed-tx' : ''}`
+                return html.node`
+                    <li class="${className}" data-txid="${txid}">
+                        <div class="transaction__icon">${icon}</div>
+                        <div class="transaction__receiver breakable">${transactionReceiver}</div>
+                        <time class="transaction__time">${getFormattedTime(time)}</time>
+                        <div class="transaction__amount amount-shown" data-btc-amount="${amount}">${formatAmount(amount * globalExchangeRate[getRef('currency_selector').value])}</div>
+                    </li>
+                `;
+            },
+            async transactions(address) {
+                try {
+                    // render transactions
+                    await getExchangeRate();
+                    getRef('check_address_button').disabled = true;
+                    getRef('address_balance').value = '';
+                    getRef('transactions_list').innerHTML = '<sm-spinner class="justify-self-center margin-top-1-5"></sm-spinner>';
+                    getAddressDetails(address).then(result => {
+                        getRef('address_balance').value = formatAmount(result.balance * globalExchangeRate[getRef('currency_selector').value]);
+                        getRef('address_balance').dataset.btcAmount = result.balance;
+                        getRef('address_balance').parentElement.classList.remove('hidden')
+                        if (result.txs.length) {
+                            let allTransactions = result.txs;
+                            const filter = getRef('filter_selector').value;
+                            if (filter !== 'all') {
+                                allTransactions = allTransactions.filter(t => filter === 'sent' ? t.type === 'out' : t.type === 'in')
+                            }
+                            if (transactionsLazyLoader) {
+                                transactionsLazyLoader.update(allTransactions)
+                            } else {
+                                transactionsLazyLoader = new LazyLoader('#transactions_list', allTransactions, render.transactionCard)
+                            }
+                            transactionsLazyLoader.init()
+                            getRef('transactions_list').previousElementSibling.classList.remove('hidden');
+                        } else {
+                            getRef('transactions_list').textContent = 'No transactions found';
+                        }
+                    }).catch(error => console.error(error)).finally(_ => getRef('check_address_button').disabled = false)
+                } catch (err) {
+                    notify(err, 'error');
+                }
+            }
+        }
+        const currencyIcons = {
+            btc: ` <svg class="icon" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"> <g> <rect fill="none" height="24" width="24"></rect> </g> <g> <path d="M17.06,11.57C17.65,10.88,18,9.98,18,9c0-1.86-1.27-3.43-3-3.87L15,3h-2v2h-2V3H9v2H6v2h2v10H6v2h3v2h2v-2h2v2h2v-2 c2.21,0,4-1.79,4-4C19,13.55,18.22,12.27,17.06,11.57z M10,7h4c1.1,0,2,0.9,2,2s-0.9,2-2,2h-4V7z M15,17h-5v-4h5c1.1,0,2,0.9,2,2 S16.1,17,15,17z"> </path> </g> </svg> `,
+            usd: `<svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>`,
+            inr: `<svg class="icon" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><g><rect fill="none" height="24" width="24"/></g><g><g><path d="M13.66,7C13.1,5.82,11.9,5,10.5,5L6,5V3h12v2l-3.26,0c0.48,0.58,0.84,1.26,1.05,2L18,7v2l-2.02,0c-0.25,2.8-2.61,5-5.48,5 H9.77l6.73,7h-2.77L7,14v-2h3.5c1.76,0,3.22-1.3,3.46-3L6,9V7L13.66,7z"/></g></g></svg>`
+        }
+        function calculateFee() {
+            fetch('https://bitcoiner.live/api/fees/estimates/latest').then(res => res.json()).then(data => {
+                const satPerByte = data.estimates['60'].sat_per_vbyte;
+                const legacyBytes = 200;
+                const segwitBytes = 77;
+                const fees = (legacyBytes * satPerByte + (0.25 * satPerByte) * segwitBytes) / Math.pow(10, 8);
+                getRef('send_fee').value = parseFloat((fees * globalExchangeRate[getRef('currency_selector').value]).toFixed(8));
+            }).catch(e => {
+                console.error(e)
+            })
+        }
+        getRef('currency_selector').addEventListener('change', async e => {
+            const exchangeRate = await getExchangeRate();
+            localStorage.setItem('btc-wallet-currency', e.target.value);
+            document.querySelectorAll('.currency-symbol').forEach(el => el.innerHTML = currencyIcons[e.target.value])
+            document.querySelectorAll('.amount-shown').forEach(el => {
+                el.textContent = formatAmount(parseFloat(el.dataset.btcAmount) * globalExchangeRate[getRef('currency_selector').value])
+            })
+            calculateFee();
+        })
+        getRef('filter_selector').addEventListener('change', async e => {
+            const address = getRef('check_address_input').value;
+            render.transactions(address)
+        })
+        getRef('gen_new_addr_btn').addEventListener('click', () => {
+            const { wif, address, segwitAddress, bech32Address } = btc_api.newKeys;
+            renderElem(getRef('generated_btc_addr'), html`
+                <div>
+                    <h5>BTC Address</h5>
+                    <sm-copy value="${bech32Address}"></sm-copy>
+                </div>
+                <div>
+                    <h5>Private Key</h5>
+                    <sm-copy value="${wif}"></sm-copy>
+                </div>
+            `);
+            openPopup('generate_btc_addr_popup');
+        });
+        function retrieveBtcAddr() {
+            let wif = getRef('retrieve_btc_addr_field').value.trim();
+            // addressForm['legacy'].value = btc_api.address(wif);
+            // addressForm['segwit'].value = btc_api.segwitAddress(wif);
+            getRef('recovered_btc_addr_wrapper').classList.remove('hidden')
+            getRef('recovered_btc_addr').value = btc_api.bech32Address(wif);
+        }
+
+        function togglePrivateKeyVisibility(input) {
+            const target = input.closest('sm-input')
+            target.type = target.type === 'password' ? 'text' : 'password';
+            target.focusIn()
+        }
+
+        getRef('convert_priv_key').onclick = evt => {
+            let source_wif = getRef('any_private').value.trim();
+            let btc_wif = btc_api.convert.wif(source_wif);
+            getRef('btc_private').value = btc_wif;
+            getRef('priv_key_bech32').value = btc_api.bech32Address(btc_wif);
+        }
+        getRef('convert_flo_btc').onclick = evt => {
+            const flo_addr = getRef('convert_flo_input').value.trim();
+            const btc_bech = getRef('convert_btc_input').value.trim();
+            if (btc_bech === '' && flo_addr === '') {
+                notify('Please enter either FLO or BTC address', 'error');
+                return;
+            }
+            console.log(flo_addr, btc_bech)
+            if (flo_addr !== '') {
+                getRef('convert_btc_input').value = btc_api.convert.legacy2bech(flo_addr);
+            } else {
+                getRef('convert_flo_input').value = btc_api.convert.bech2legacy(btc_bech, 0x23);
+            }
+        }
+        const sendCardObserver = new MutationObserver(mutations => {
+            mutations.forEach(mutation => {
+                if (mutation.type === 'childList') {
+                    if (mutation.addedNodes.length > 0 && mutation.target.children.length > 1) {
+                        const removeButton = mutation.target.firstElementChild.querySelector('.remove-card')
+                        if (!removeButton) {
+                            const newRemoveButton = html.node`
+                                <button class="remove-card button--small">
+                                    <svg class="icon margin-right-0-3" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000">
+                                        <path d="M0 0h24v24H0V0z" fill="none"></path>
+                                        <path d="M7 11v2h10v-2H7zm5-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"></path>
+                                    </svg>
+                                    Remove
+                                </button>
+                            `
+                            mutation.target.firstElementChild.querySelector('.remove-card-wrapper').appendChild(newRemoveButton)
+                        }
+                    } else if (mutation.removedNodes.length > 0 && mutation.target.children.length === 1) {
+                        const removeButton = mutation.target.firstElementChild.querySelector('.remove-card')
+                        if (removeButton) {
+                            removeButton.remove()
+                        }
+                    }
+                }
+            })
+        })
+        sendCardObserver.observe(getRef('sender_container'), {
+            childList: true
+        })
+        sendCardObserver.observe(getRef('receiver_container'), {
+            childList: true
+        })
+        getRef('add_sender').onclick = evt => {
+            let senderCard = getRef('sender_template').content.cloneNode(true)
+            if (!getRef('sender_container').children.length) {
+                senderCard.querySelector('.remove-card').remove()
+            }
+            getRef('sender_container').appendChild(senderCard);
+            getRef('sender_container').querySelectorAll('sm-input[data-btc-address]').forEach(input => input.customValidation = btc_api.validateAddress)
+        }
+        getRef('send_tx').addEventListener('click', e => {
+            if (e.target.closest('.remove-card')) {
+                e.target.closest('.card').remove()
+            }
+        })
+        function formatAmount(amount = 0) {
+            const currency = getRef('currency_selector').value;
+            if (!amount)
+                return '0';
+            return amount.toLocaleString(`en-IN`, { style: 'currency', currency, maximumFractionDigits: currency === 'btc' ? 8 : 2 })
+        }
+        let globalExchangeRate = {}
+        async function getExchangeRate() {
+            return new Promise((resolve, reject) => {
+                Promise.all(['usd', 'inr'].map(cur => fetch(`https://bitpay.com/api/rates/btc/${cur}`))).then(responses => {
+                    Promise.all(responses.map(res => res.json())).then(rates => {
+                        rates.forEach(rate => {
+                            globalExchangeRate[rate.code.toLowerCase()] = rate.rate
+                        })
+                        globalExchangeRate.btc = 1
+                        resolve(globalExchangeRate)
+                    }).catch(err => console.log(err))
+                }).catch(err => console.log(err))
+            })
+        }
+        getRef('check_balance').onclick = async evt => {
+            const addresses = [...getRef('sender_container').querySelectorAll('.sender-input')].filter(input => input.value.trim() !== '').map(input => input.value.trim())
+            if (addresses.length === 0) {
+                notify('Please add at least one sender address', 'error')
+                return;
+            }
+            getRef("total_balance").innerHTML = '<sm-spinner></sm-spinner>';
+            let totalBalance = 0;
+            console.debug(addresses);
+            let senderBalances = [...getRef('sender_container').querySelectorAll('.sender-balance')];
+            try {
+                senderBalances.forEach(el => el.innerHTML = '<sm-spinner></sm-spinner>');
+                await getExchangeRate();
+                const balances = await Promise.all(addresses.map((addr, index) => btc_api.getBalance(addr)))
+                balances.forEach((result, index) => {
+                    senderBalances[index].textContent = formatAmount(result * globalExchangeRate[getRef('currency_selector').value]);
+                    senderBalances[index].dataset.btcAmount = result;
+                    totalBalance += result;
+                })
+                getRef("total_balance").textContent = `: ${formatAmount(totalBalance * globalExchangeRate[getRef('currency_selector').value])}`;
+                getRef("total_balance").dataset.btcAmount = totalBalance;
+            } catch (e) {
+                notify(e, 'error');
+            }
+        }
+        getRef('add_receiver').onclick = evt => {
+            let receiverCard = getRef('receiver_template').content.cloneNode(true)
+            if (!getRef('receiver_container').children.length) {
+                receiverCard.querySelector('.remove-card').remove()
+            }
+            receiverCard.querySelector('.currency-symbol').innerHTML = currencyIcons[getRef('currency_selector').value]
+            getRef('receiver_container').appendChild(receiverCard);
+            getRef('receiver_container').querySelectorAll('sm-input[data-btc-address]').forEach(input => input.customValidation = btc_api.validateAddress)
+        }
+
+        getRef('fees_selector').addEventListener('change', e => {
+            if (e.target.value !== 'custom') {
+                getRef('send_fee').readOnly = true;
+            }
+            switch (e.target.value) {
+                case 'custom':
+                    getRef('send_fee').readOnly = false;
+                    getRef('send_fee').focusIn()
+                    getRef('selected_fee_tip').textContent = 'Set custom fee'
+                    break;
+                case 'suggested':
+                    getRef('selected_fee_tip').textContent = 'Estimated time of confirmation is 1hr'
+                    break;
+            }
+        })
+
+
+        getRef('send_transaction').onclick = evt => {
+            buttonLoader('send_transaction', true)
+            getExchangeRate().then(exchangeRate => {
+                const senders = [...new Set([...getRef('sender_container').querySelectorAll('.sender-input')].map(input => input.value.trim()))];
+                const privKeys = [...getRef('sender_container').querySelectorAll('.priv-key-input')].map(input => input.value.trim());
+                const receivers = [...getRef('receiver_container').querySelectorAll('.receiver-input')].map(input => input.value.trim());
+                const amounts = [...getRef('receiver_container').querySelectorAll('.amount-input')].map(input => {
+                    return parseFloat(input.value.trim()) / globalExchangeRate[getRef('currency_selector').value]
+                });
+                const fee = parseFloat(getRef('send_fee').value.trim());
+                console.debug(senders, receivers, amounts, fee);
+                btc_api.sendTx(senders, privKeys, receivers, amounts, fee).then(result => {
+                    console.log(result);
+                    getRef('txid').value = result.txid;
+                    openPopup('txid_popup');
+                }).catch(error => {
+                    notify(`Error sending transaction \n ${error}`, 'error');
+                }).finally(_ => {
+                    buttonLoader('send_transaction', false)
+                })
+            }).catch(err => {
+                notify(err, 'error')
+                buttonLoader('send_transaction', false)
+            })
+
+        }
+
+        getRef('check_address_button').addEventListener('click', evt => {
+            const address = getRef('check_address_input').value;
+            render.transactions(address)
+        })
 
         function getAddressDetails(address) {
             return new Promise((resolve, reject) => {
@@ -453,7 +1400,7 @@
             })
         }
 
-    })();
-</script>
+    </script>
+</body>
 
 </html>
