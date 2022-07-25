@@ -56,7 +56,7 @@
                 <theme-toggle></theme-toggle>
             </div>
         </header>
-        <main id="pages_container">
+        <main id="pages_container" class="grid">
             <div id="address_details" class="page hidden">
                 <section class="flex margin-bottom-1-5">
                     <button id="gen_new_addr_btn" class="button primary-action interact">
@@ -127,7 +127,7 @@
                 </section>
             </div>
             <div id="send" class="page hidden">
-                <sm-form id="send_tx" class="margin-bottom-1-5">
+                <sm-form id="send_tx">
                     <div class="margin-bottom-0-5">
                         <div class="flex align-center space-between margin-bottom-0-5">
                             <h3>Senders</h3>
@@ -174,7 +174,7 @@
                             <div class="currency-symbol flex" slot="icon"></div>
                         </sm-input>
                     </div>
-                    <div class="multi-state-button">
+                    <div class="multi-state-button margin-bottom-1-5">
                         <button id="send_transaction" type="submit" class="button button--primary cta w-100"
                             disabled>Send</button>
                     </div>

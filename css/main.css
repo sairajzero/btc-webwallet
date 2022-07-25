@@ -1021,11 +1021,8 @@ ol li::before {
   }
 }
 @media screen and (min-width: 64rem) {
-  #main_card {
-    margin: 2rem 12vw;
-    width: calc(100% - 24vw);
-    height: calc(100% - 4rem);
-    border-radius: 0.5rem;
+  #pages_container {
+    padding: 0 12vw;
   }
 }
 @media (any-hover: hover) {
