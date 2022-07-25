@@ -170,7 +170,7 @@
                         </div>
                         <p id="selected_fee_tip">Estimated time of confirmation is 1hr</p>
                         <sm-input type="number" id="send_fee" placeholder="Fee" min="0.00000001" step="0.00000001"
-                            readonly animate required>
+                            error-text="Please enter valid fees" readonly animate required>
                             <div class="currency-symbol flex" slot="icon"></div>
                         </sm-input>
                     </div>
@@ -1145,7 +1145,8 @@
             })
         }
         getRef('currency_selector').addEventListener('change', async e => {
-            const exchangeRate = await getExchangeRate();
+            if (!globalExchangeRate.hasOwnProperty(e.target.value))
+                await getExchangeRate();
             localStorage.setItem('btc-wallet-currency', e.target.value);
             document.querySelectorAll('.currency-symbol').forEach(el => el.innerHTML = currencyIcons[e.target.value])
             document.querySelectorAll('.amount-shown').forEach(el => {
