@@ -86,7 +86,7 @@
                     </button>
                 </section>
                 <section>
-                    <h4 class="margin-bottom-1">Check address Details</h4>
+                    <h4 class="margin-bottom-1">Check balance and transactions</h4>
                     <sm-form class="flex" style="--gap: 0.5rem;">
                         <sm-input type="search" id="check_address_input" placeholder="BTC Address" data-btc-address
                             error-text="Invalid BTC address" required>
@@ -100,7 +100,7 @@
                         <button id="check_address_button" class="button button--primary cta" style="height: 3.2rem;"
                             type="submit" disabled>GO</button>
                     </sm-form>
-                    <div id="address_balance_card" class="flex align-center space-between hidden">
+                    <div id="address_balance_card" class="grid gap-1 hidden">
                         <div class="flex">
                             <svg class="icon margin-right-0-3" xmlns="http://www.w3.org/2000/svg" height="24px"
                                 viewBox="0 0 24 24" width="24px" fill="#000000">
@@ -113,7 +113,8 @@
                         </div>
                         <output id="address_balance" class="amount-shown"></output>
                     </div>
-                    <div class="flex align-center space-between hidden margin-bottom-1">
+                    <div class="flex align-center space-between hidden margin-bottom-1 sticky top-0"
+                        style="background-color: rgba(var(--foreground-color), 1);">
                         <h5>Transactions</h5>
                         <strip-select id="filter_selector">
                             <strip-option value="sent" selected>Sent</strip-option>
@@ -1089,9 +1090,10 @@
                 return html.node`
                     <li class="${className}" data-txid="${txid}">
                         <div class="transaction__icon">${icon}</div>
-                        <div class="transaction__receiver breakable">${transactionReceiver}</div>
                         <time class="transaction__time">${getFormattedTime(time)}</time>
                         <div class="transaction__amount amount-shown" data-btc-amount="${amount}">${formatAmount(amount * globalExchangeRate[getRef('currency_selector').value])}</div>
+                        <div class="transaction__receiver wrap-around">${transactionReceiver}</div>
+                        <div class="transaction__id wrap-around">TXID: ${txid}</div>
                     </li>
                 `;
             },

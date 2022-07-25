@@ -15,6 +15,7 @@ body {
 
 body {
   --accent-color: #4d77ff;
+  --accent-color-rgb: 77, 119, 255;
   --text-color: 20, 20, 20;
   --foreground-color: 252, 253, 255;
   --background-color: 241, 243, 248;
@@ -33,6 +34,7 @@ body {
 
 body[data-theme="dark"] {
   --accent-color: #a0b6ff;
+  --accent-color-rgb: 160, 182, 255;
   --text-color: 220, 220, 220;
   --foreground-color: 27, 28, 29;
   --background-color: 21, 22, 22;
@@ -281,7 +283,7 @@ ol {
   text-overflow: ellipsis;
 }
 
-.breakable {
+.wrap-around {
   overflow-wrap: break-word;
   word-wrap: break-word;
   word-break: break-word;
@@ -730,11 +732,16 @@ ol {
   }
 }
 #address_balance_card {
-  padding: 1rem;
-  background-color: rgba(var(--text-color), 0.06);
+  padding: 1.5rem;
   border-radius: 0.5rem;
   margin-top: 0.5rem;
   margin-bottom: 1.5rem;
+  background-color: rgba(var(--accent-color-rgb), 0.2);
+}
+#address_balance {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--accent-color);
 }
 .card {
   padding: 0.5rem 0;
@@ -769,7 +776,10 @@ ol {
   grid-template-columns: auto 1fr auto;
   gap: 0.5rem 1rem;
   align-items: center;
-  grid-template-areas: "icon receiver receiver" "icon time amount";
+  grid-template-areas: "icon time amount" "icon receiver receiver" "icon txid txid";
+  &:not(:last-of-type) {
+    padding-bottom: 1rem;
+  }
   &__amount {
     white-space: nowrap;
   }
@@ -818,6 +828,11 @@ ol {
     grid-area: amount;
     font-size: 1rem;
     font-weight: 700;
+  }
+  &__id {
+    grid-area: txid;
+    font-size: 0.8rem;
+    color: rgba(var(--text-color), 0.8);
   }
 }
 .fab {
