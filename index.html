@@ -758,12 +758,29 @@
                 const urlSearchParams = new URLSearchParams('?' + searchParams);
                 params = Object.fromEntries(urlSearchParams.entries());
             }
-            if (pagesData.lastPage !== pageId) {
-                pagesData.lastPage = pageId
-            }
             if (params)
                 pagesData.params = params
             switch (pageId) {
+                case 'address_details':
+                    console.log(params)
+                    if (params.address) {
+                        const address = getRef('check_address_input').value;
+                        if (address !== params.address) {
+                            getRef('check_address_input').value = params.address
+                            getRef('check_address_button').click()
+                        }
+                    } else {
+                        getRef('check_address_button').disabled = true;
+                        getRef('address_balance').parentElement.classList.add('hidden')
+                        getRef('transactions_list').previousElementSibling.classList.add('hidden');
+
+                        getRef('check_address_input').value = ''
+                        if (transactionsLazyLoader) {
+                            transactionsLazyLoader.clear()
+                            transactionsLazyLoader = null
+                        }
+                    }
+                    break;
                 case 'send':
                     getExchangeRate().then(() => {
                         calculateFee()
@@ -861,9 +878,12 @@
                     getRef('main_header').classList.add('hidden')
                 }
             }
-            document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'))
-            getRef(pageId).classList.remove('hidden')
-            getRef(pageId).animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300, fill: 'forwards', easing: 'ease' })
+            if (pagesData.lastPage !== pageId) {
+                document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'))
+                getRef(pageId).classList.remove('hidden')
+                getRef(pageId).animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300, fill: 'forwards', easing: 'ease' })
+                pagesData.lastPage = pageId
+            }
         }
 
         const indicatorObserver = new IntersectionObserver(entries => {
@@ -1100,10 +1120,10 @@
             async transactions(address) {
                 try {
                     // render transactions
-                    await getExchangeRate();
-                    getRef('check_address_button').disabled = true;
-                    getRef('address_balance').value = '';
                     getRef('transactions_list').innerHTML = '<sm-spinner class="justify-self-center margin-top-1-5"></sm-spinner>';
+                    getRef('check_address_button').disabled = true;
+                    getRef('address_balance').innerHTML = '<sm-spinner class="justify-self-center margin-top-1-5"></sm-spinner>';
+                    await getExchangeRate();
                     getAddressDetails(address).then(result => {
                         getRef('address_balance').value = formatAmount(result.balance * globalExchangeRate[getRef('currency_selector').value]);
                         getRef('address_balance').dataset.btcAmount = result.balance;
@@ -1360,7 +1380,7 @@
 
         getRef('check_address_button').addEventListener('click', evt => {
             const address = getRef('check_address_input').value;
-            render.transactions(address)
+            location.hash = `#/address_details?address=${address}`;
         })
 
         function getAddressDetails(address) {
