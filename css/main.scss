@@ -805,6 +805,11 @@ ol {
       }
     }
   }
+  &.unconfirmed-tx {
+    .icon {
+      fill: var(--yellow);
+    }
+  }
   &__icon {
     grid-area: icon;
     display: flex;

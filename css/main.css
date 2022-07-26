@@ -863,6 +863,9 @@ ol li::before {
 .transaction.in .transaction__amount::before {
   content: "+ ";
 }
+.transaction.unconfirmed-tx .icon {
+  fill: var(--yellow);
+}
 .transaction__icon {
   grid-area: icon;
   display: flex;

@@ -3,11 +3,6 @@
 
 <head>
     <title>Bitcoin Web Wallet</title>
-    <style>
-        .unconfirmed-tx {
-            color: red;
-        }
-    </style>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="components.js" defer></script>
@@ -1076,15 +1071,20 @@
                 const { address, amount, time, txid, sender, receiver, type, block } = transactionDetails;
                 let transactionReceiver
                 let icon
-                if (type === 'out') {
-                    transactionReceiver = `Sent to ${receiver}`;
-                    icon = svg`<svg class="icon sent" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/></svg>`;
-                } else if (type === 'in') {
-                    transactionReceiver = `Received from ${sender}`;
-                    icon = svg`<svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z"/></svg>`;
-                } else if (type === 'self') {
-                    transactionReceiver = `Sent to self`;
-                    icon = svg`<svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z"/></svg>`;
+                if (block) {
+                    if (type === 'out') {
+                        transactionReceiver = `Sent to ${receiver}`;
+                        icon = svg`<svg class="icon sent" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/></svg>`;
+                    } else if (type === 'in') {
+                        transactionReceiver = `Received from ${sender}`;
+                        icon = svg`<svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z"/></svg>`;
+                    } else if (type === 'self') {
+                        transactionReceiver = `Sent to self`;
+                        icon = svg`<svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z"/></svg>`;
+                    }
+                } else {
+                    transactionReceiver = (type === 'out' ? `Sent to ${receiver}` : `Received from ${sender}`) + ` (Unconfirmed)`;
+                    icon = svg`<svg class="icon" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><g><rect fill="none" height="24" width="24"/></g><g><path d="M6,2l0.01,6L10,12l-3.99,4.01L6,22h12v-6l-4-4l4-3.99V2H6z M16,16.5V20H8v-3.5l4-4L16,16.5z"/></g></svg>`;
                 }
                 const className = `transaction grid ${type} ${block === null ? 'unconfirmed-tx' : ''}`
                 return html.node`
