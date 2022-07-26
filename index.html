@@ -765,17 +765,15 @@
                     console.log(params)
                     if (params.address) {
                         const address = getRef('check_address_input').value;
-                        if (address !== params.address) {
-                            getRef('check_address_input').value = params.address
-                            if (btc_api.validateAddress(params.address)) {
-                                render.transactions(params.address)
-                            } else {
-                                getRef('address_balance').parentElement.classList.add('hidden')
-                                getRef('transactions_list').previousElementSibling.classList.add('hidden');
-                                if (transactionsLazyLoader) {
-                                    transactionsLazyLoader.clear()
-                                    transactionsLazyLoader = null
-                                }
+                        getRef('check_address_input').value = params.address
+                        if (btc_api.validateAddress(params.address)) {
+                            render.transactions(params.address)
+                        } else {
+                            getRef('address_balance').parentElement.classList.add('hidden')
+                            getRef('transactions_list').previousElementSibling.classList.add('hidden');
+                            if (transactionsLazyLoader) {
+                                transactionsLazyLoader.clear()
+                                transactionsLazyLoader = null
                             }
                         }
                     } else {
