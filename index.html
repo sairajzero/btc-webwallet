@@ -1340,6 +1340,12 @@
                     console.log(result);
                     getRef('txid').value = result.txid;
                     openPopup('txid_popup');
+                    getRef('send_tx').reset()
+                    getExchangeRate().then(() => {
+                        calculateFee()
+                    }).catch(e => {
+                        console.error(e)
+                    })
                 }).catch(error => {
                     notify(`Error sending transaction \n ${error}`, 'error');
                 }).finally(_ => {
