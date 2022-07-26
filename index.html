@@ -769,6 +769,13 @@
                             getRef('check_address_input').value = params.address
                             if (btc_api.validateAddress(params.address)) {
                                 render.transactions(params.address)
+                            } else {
+                                getRef('address_balance').parentElement.classList.add('hidden')
+                                getRef('transactions_list').previousElementSibling.classList.add('hidden');
+                                if (transactionsLazyLoader) {
+                                    transactionsLazyLoader.clear()
+                                    transactionsLazyLoader = null
+                                }
                             }
                         }
                     } else {
