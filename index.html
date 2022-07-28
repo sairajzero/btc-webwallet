@@ -13,7 +13,6 @@
         href="https://fonts.googleapis.com/css2?family=Calistoga&family=Roboto:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&display=swap"
         rel="stylesheet">
     <script src="https://unpkg.com/uhtml@3.0.1/es.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js">
     </script>
     <script type="text/javascript" src="lib.js"></script>
     <script type="text/javascript" src="lib_btc.js"></script>
@@ -1449,6 +1448,24 @@
             })
         }
 
+
+        //  replacement for jquery ajax
+        function ajax(options) {
+            const xhr = new XMLHttpRequest();
+            xhr.open(options.method, options.url, true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.onload = function () {
+                if (this.status >= 200 && this.status < 300) {
+                    options.success(JSON.parse(this.response));
+                } else {
+                    options.error(this.statusText);
+                }
+            };
+            xhr.onerror = function () {
+                options.error(this.statusText);
+            };
+            xhr.send(JSON.stringify(options.data));
+        }
     </script>
 </body>
 
