@@ -145,7 +145,7 @@ button .icon {
 
 .cta {
   text-transform: uppercase;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   padding: 0.8rem 1rem;
@@ -248,7 +248,7 @@ strip-select {
 }
 
 strip-option {
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   --border-radius: 0.2rem;
   -webkit-user-select: none;
      -moz-user-select: none;
@@ -287,7 +287,7 @@ ol li::before {
   align-items: center;
   justify-content: center;
   text-align: center;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   font-weight: 500;
   margin-top: 0.15rem;
   margin-right: 1rem;
@@ -449,7 +449,7 @@ ol li::before {
 }
 
 .label {
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   color: rgba(var(--text-color), 0.8);
   font-weight: 500;
   margin-bottom: 0.2rem;
@@ -675,7 +675,7 @@ ol li::before {
   justify-content: center;
   padding: 0.5rem 0.3rem;
   color: var(--text-color);
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   border-radius: 0.3rem;
   font-weight: 500;
 }
@@ -750,7 +750,7 @@ ol li::before {
   padding: 0.8rem 1rem;
   gap: 0.5rem;
   white-space: normal;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   border-radius: 0.5rem;
   background-color: transparent;
   border: thin solid rgba(var(--text-color), 0.3);
@@ -863,6 +863,9 @@ ol li::before {
 .transaction.in .transaction__amount::before {
   content: "+ ";
 }
+.transaction.unconfirmed-tx {
+  grid-template-areas: "icon time amount" "icon receiver receiver" "icon txid txid" "icon unconfirmed unconfirmed";
+}
 .transaction.unconfirmed-tx .icon {
   fill: var(--yellow);
 }
@@ -882,7 +885,7 @@ ol li::before {
 }
 .transaction__time {
   grid-area: time;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   color: rgba(var(--text-color), 0.8);
 }
 .transaction__amount {
@@ -892,8 +895,12 @@ ol li::before {
 }
 .transaction__id {
   grid-area: txid;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   color: rgba(var(--text-color), 0.8);
+}
+.transaction .unconfirmed-wrapper {
+  grid-area: unconfirmed;
+  padding: 0.5rem 0;
 }
 
 .fab {

@@ -318,8 +318,7 @@
                     <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
                 </svg>
                 <h3>Keep your keys safe!</h3>
-                <strong>Don't share with anyone. Once lost private key can't be
-                    recovered.</strong>
+                <strong>Don't share with anyone. The private key cannot be recovered if lost.</strong>
             </div>
             <div id="generated_btc_addr" class="generated-id-card"></div>
         </div>
@@ -709,6 +708,10 @@
             const rippleAnimation = circle.animate(
                 [
                     {
+                        opacity: 1,
+                        transform: `scale(0)`
+                    },
+                    {
                         transform: "scale(4)",
                         opacity: 0,
                     },
@@ -1095,9 +1098,10 @@
         let transactionsLazyLoader
         const render = {
             transactionCard(transactionDetails) {
-                const { address, amount, time, txid, sender, receiver, type, block } = transactionDetails;
+                let { address, amount, time, txid, sender, receiver, type, block } = transactionDetails;
                 let transactionReceiver
                 let icon
+                // block = null
                 if (block) {
                     if (type === 'out') {
                         transactionReceiver = `Sent to ${receiver}`;
@@ -1110,7 +1114,8 @@
                         icon = svg`<svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z"/></svg>`;
                     }
                 } else {
-                    transactionReceiver = (type === 'out' ? `Sent to ${receiver}` : `Received from ${sender}`) + ` (Unconfirmed)`;
+                    console.log(transactionDetails)
+                    transactionReceiver = (type === 'out' ? `Sent to ${receiver}` : `Received from ${sender}`);
                     icon = svg`<svg class="icon" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><g><rect fill="none" height="24" width="24"/></g><g><path d="M6,2l0.01,6L10,12l-3.99,4.01L6,22h12v-6l-4-4l4-3.99V2H6z M16,16.5V20H8v-3.5l4-4L16,16.5z"/></g></svg>`;
                 }
                 const className = `transaction grid ${type} ${block === null ? 'unconfirmed-tx' : ''}`
@@ -1121,8 +1126,14 @@
                         <div class="transaction__amount amount-shown" data-btc-amount="${amount}">${formatAmount(amount * globalExchangeRate[getRef('currency_selector').value])}</div>
                         <div class="transaction__receiver wrap-around">${transactionReceiver}</div>
                         <div class="transaction__id wrap-around">TXID: ${txid}</div>
-                    </li>
-                `;
+                        </li>
+                        `;
+                // ${!block ? html`
+                //     <p class="flex align-center unconfirmed-wrapper">
+                //         <span class="margin-right-0-5">Confirmation taking too long? </span>
+                //         <button class="button button--small">Increase fees</button>
+                //     </p>
+                //     `: ''}
             },
             async transactions(address) {
                 try {
@@ -1342,11 +1353,12 @@
             switch (e.target.value) {
                 case 'custom':
                     getRef('send_fee').readOnly = false;
-                    getRef('send_fee').focusIn()
-                    getRef('selected_fee_tip').textContent = 'Set custom fee'
+                    getRef('send_fee').focusIn();
+                    getRef('selected_fee_tip').textContent = 'Set custom fee';
                     break;
                 case 'suggested':
                     getRef('selected_fee_tip').textContent = 'Estimated time of confirmation is 1hr'
+                    calculateFee();
                     break;
             }
         })
