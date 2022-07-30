@@ -2578,7 +2578,7 @@
     };
 
     const broadcast = btc_api.broadcast = rawtx => new Promise((resolve, reject) => {
-        ajax({
+        $.ajax({
             type: "POST",
             url: URL + "send_tx/BTC/",
             data: {

@@ -13,6 +13,8 @@
         href="https://fonts.googleapis.com/css2?family=Calistoga&family=Roboto:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&display=swap"
         rel="stylesheet">
     <script src="https://unpkg.com/uhtml@3.0.1/es.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
     </script>
     <script type="text/javascript" src="lib.js"></script>
     <script type="text/javascript" src="lib_btc.js"></script>
@@ -133,8 +135,8 @@
                         </div>
                         <div id="sender_container"></div>
                         <div class="flex align-center balance-wrapper">
-                            <span class="margin-right-0-5">Total balance</span>
-                            <output id="total_balance" class="amount-shown"></output>
+                            <span>Total balance:</span>
+                            <output id="total_balance" class="amount-shown" style="margin-left: 0.3rem;"></output>
                         </div>
                         <button id="add_sender" class=" button--small">
                             <svg class="icon margin-right-0-5" xmlns="http://www.w3.org/2000/svg" height="24px"
@@ -595,6 +597,7 @@
                     break;
                 case 'error':
                     icon = `<svg class="icon icon--error" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm-1-7v2h2v-2h-2zm0-8v6h2V7h-2z"/></svg>`
+                    options.pinned = true
                     break;
             }
             getRef("notification_drawer").push(message, { icon, ...options });
@@ -1282,7 +1285,7 @@
             const currency = getRef('currency_selector').value;
             if (!amount)
                 return '0';
-            return amount.toLocaleString(`en-IN`, { style: 'currency', currency, maximumFractionDigits: currency === 'btc' ? 8 : 2 })
+            return amount.toLocaleString(currency === 'inr' ? `en-IN` : 'en-US', { style: 'currency', currency, maximumFractionDigits: currency === 'btc' ? 8 : 2 })
         }
         let globalExchangeRate = {}
         async function getExchangeRate() {
@@ -1317,7 +1320,7 @@
                     senderBalances[index].dataset.btcAmount = result;
                     totalBalance += result;
                 })
-                getRef("total_balance").textContent = `: ${formatAmount(totalBalance * globalExchangeRate[getRef('currency_selector').value])}`;
+                getRef("total_balance").textContent = `${formatAmount(totalBalance * globalExchangeRate[getRef('currency_selector').value])}`;
                 getRef("total_balance").dataset.btcAmount = totalBalance;
             } catch (e) {
                 notify(e, 'error');
@@ -1360,7 +1363,7 @@
                 const amounts = [...getRef('receiver_container').querySelectorAll('.amount-input')].map(input => {
                     return parseFloat(input.value.trim()) / globalExchangeRate[getRef('currency_selector').value]
                 });
-                const fee = parseFloat(getRef('send_fee').value.trim());
+                const fee = parseFloat((parseFloat(getRef('send_fee').value.trim()) / globalExchangeRate[getRef('currency_selector').value]).toFixed(8));
                 console.debug(senders, receivers, amounts, fee);
                 btc_api.sendTx(senders, privKeys, receivers, amounts, fee).then(result => {
                     console.log(result);
@@ -1379,6 +1382,7 @@
                 })
             }).catch(err => {
                 notify(err, 'error')
+            }).finally(() => {
                 buttonLoader('send_transaction', false)
             })
 
@@ -1433,25 +1437,6 @@
                     resolve(details);
                 }).catch(error => reject(error))
             })
-        }
-
-
-        //  replacement for jquery ajax
-        function ajax(options) {
-            const xhr = new XMLHttpRequest();
-            xhr.open(options.method, options.url, true);
-            xhr.setRequestHeader('Content-Type', 'application/json');
-            xhr.onload = function () {
-                if (this.status >= 200 && this.status < 300) {
-                    options.success(JSON.parse(this.response));
-                } else {
-                    options.error(this.statusText);
-                }
-            };
-            xhr.onerror = function () {
-                options.error(this.statusText);
-            };
-            xhr.send(JSON.stringify(options.data));
         }
     </script>
 </body>
