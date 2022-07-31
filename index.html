@@ -5,13 +5,14 @@
     <title>Bitcoin Web Wallet</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="components.js" defer></script>
+    <link rel="shortcut icon" href="favicon.svg" type="image/x-icon">
     <link rel="stylesheet" href="css/main.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Calistoga&family=Roboto:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&display=swap"
         rel="stylesheet">
+    <script src="components.js" defer></script>
     <script src="https://unpkg.com/uhtml@3.0.1/es.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"
         integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
@@ -115,9 +116,9 @@
                         style="background-color: rgba(var(--foreground-color), 1);">
                         <h5>Transactions</h5>
                         <strip-select id="filter_selector">
-                            <strip-option value="sent" selected>Sent</strip-option>
+                            <strip-option value="all" selected>All</strip-option>
+                            <strip-option value="sent">Sent</strip-option>
                             <strip-option value="received">Received</strip-option>
-                            <strip-option value="all">All</strip-option>
                         </strip-select>
                     </div>
                     <ul id="transactions_list" class="observe-empty-state"></ul>
@@ -208,7 +209,7 @@
                                     </svg>
                                 </label>
                             </sm-input>
-                            <button type="submit" id="convert_priv_key">Go</button>
+                            <button type="submit" id="convert_priv_key" class="button button--primary cta">Go</button>
                         </sm-form>
                         <div class="grid gap-0-5">
                             <sm-input type="password" id="btc_private" class="password-field"
@@ -387,14 +388,20 @@
                 </button>
             </div>
         </header>
-        <div class="grid gap-0-5 justify-center text-center">
+        <div class="grid gap-2">
             <svg class="icon user-action-result__icon success" xmlns="http://www.w3.org/2000/svg" height="24px"
                 viewBox="0 0 24 24" width="24px" fill="#000000">
                 <path d="M0 0h24v24H0V0z" fill="none" />
                 <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z" />
             </svg>
-            <h4>Transaction sent</h4>
-            <sm-copy id="txid"></sm-copy>
+            <div class="grid gap-0-5 justify-center text-center">
+                <h4>Transaction sent</h4>
+                <p>Confirmation of transaction might take few hours. </p>
+            </div>
+            <div class="grid">
+                <span class="label">Transaction ID</span>
+                <sm-copy id="txid" value="dsknsodkgbnsldkgn"></sm-copy>
+            </div>
         </div>
     </sm-popup>
     <template id="sender_template">
@@ -755,31 +762,7 @@
                 pagesData.params = params
             switch (pageId) {
                 case 'address_details':
-                    console.log(params)
-                    if (params.address) {
-                        const address = getRef('check_address_input').value;
-                        getRef('check_address_input').value = params.address
-                        if (btc_api.validateAddress(params.address)) {
-                            render.transactions(params.address)
-                        } else {
-                            getRef('address_balance').parentElement.classList.add('hidden')
-                            getRef('transactions_list').previousElementSibling.classList.add('hidden');
-                            if (transactionsLazyLoader) {
-                                transactionsLazyLoader.clear()
-                                transactionsLazyLoader = null
-                            }
-                        }
-                    } else {
-                        getRef('check_address_button').disabled = true;
-                        getRef('address_balance').parentElement.classList.add('hidden')
-                        getRef('transactions_list').previousElementSibling.classList.add('hidden');
-
-                        getRef('check_address_input').value = ''
-                        if (transactionsLazyLoader) {
-                            transactionsLazyLoader.clear()
-                            transactionsLazyLoader = null
-                        }
-                    }
+                    render.addressDetails(params.address)
                     break;
                 case 'send':
                     getExchangeRate().then(() => {
@@ -1104,7 +1087,6 @@
                         icon = svg`<svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z"/></svg>`;
                     }
                 } else {
-                    console.log(transactionDetails)
                     transactionReceiver = (type === 'out' ? `Sent to ${receiver}` : `Received from ${sender}`);
                     icon = svg`<svg class="icon" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><g><rect fill="none" height="24" width="24"/></g><g><path d="M6,2l0.01,6L10,12l-3.99,4.01L6,22h12v-6l-4-4l4-3.99V2H6z M16,16.5V20H8v-3.5l4-4L16,16.5z"/></g></svg>`;
                 }
@@ -1116,6 +1098,7 @@
                         <div class="transaction__amount amount-shown" data-btc-amount="${amount}">${formatAmount(amount * globalExchangeRate[getRef('currency_selector').value])}</div>
                         <div class="transaction__receiver wrap-around">${transactionReceiver}</div>
                         <div class="transaction__id wrap-around">TXID: ${txid}</div>
+                        ${!block ? html`<p class="pending-badge">Confirmation pending: amount will be deducted after transaction is confirmed</p>` : ''}
                         </li>
                         `;
                 // ${!block ? html`
@@ -1155,6 +1138,31 @@
                     }).catch(error => console.error(error)).finally(_ => getRef('check_address_button').disabled = false)
                 } catch (err) {
                     notify(err, 'error');
+                }
+            },
+            addressDetails(address) {
+                if (address) {
+                    getRef('check_address_input').value = address
+                    if (btc_api.validateAddress(address)) {
+                        render.transactions(address)
+                    } else {
+                        getRef('address_balance').parentElement.classList.add('hidden')
+                        getRef('transactions_list').previousElementSibling.classList.add('hidden');
+                        if (transactionsLazyLoader) {
+                            transactionsLazyLoader.clear()
+                            transactionsLazyLoader = null
+                        }
+                    }
+                } else {
+                    getRef('check_address_button').disabled = true;
+                    getRef('address_balance').parentElement.classList.add('hidden')
+                    getRef('transactions_list').previousElementSibling.classList.add('hidden');
+
+                    getRef('check_address_input').value = ''
+                    if (transactionsLazyLoader) {
+                        transactionsLazyLoader.clear()
+                        transactionsLazyLoader = null
+                    }
                 }
             }
         }
@@ -1390,7 +1398,11 @@
 
         getRef('check_address_button').addEventListener('click', evt => {
             const address = getRef('check_address_input').value;
-            location.hash = `#/address_details?address=${address}`;
+            if (pagesData.params.hasOwnProperty('address') && address === pagesData.params.address) {
+                render.addressDetails(address)
+            } else {
+                location.hash = `#/address_details?address=${address}`;
+            }
         })
 
         function getAddressDetails(address) {

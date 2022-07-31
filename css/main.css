@@ -864,7 +864,7 @@ ol li::before {
   content: "+ ";
 }
 .transaction.unconfirmed-tx {
-  grid-template-areas: "icon time amount" "icon receiver receiver" "icon txid txid" "icon unconfirmed unconfirmed";
+  grid-template-areas: "icon time amount" "icon receiver receiver" "icon txid txid" "icon unconfirmed unconfirmed" "icon badge badge";
 }
 .transaction.unconfirmed-tx .icon {
   fill: var(--yellow);
@@ -887,6 +887,16 @@ ol li::before {
   grid-area: time;
   font-size: 0.9rem;
   color: rgba(var(--text-color), 0.8);
+}
+.transaction .pending-badge {
+  grid-area: badge;
+  font-size: 0.8rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.5rem;
+  background-color: var(--yellow);
+  color: rgba(var(--foreground-color), 1);
+  font-weight: 500;
+  justify-self: flex-start;
 }
 .transaction__amount {
   grid-area: amount;
@@ -922,7 +932,6 @@ ol li::before {
   height: 4rem;
   width: 4rem;
   border-radius: 5rem;
-  margin-bottom: 2rem;
   -webkit-animation: popup 1s;
           animation: popup 1s;
 }
