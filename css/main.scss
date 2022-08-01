@@ -824,6 +824,8 @@ ol {
   &__receiver {
     grid-area: receiver;
     font-weight: 500;
+    margin-bottom: 0.3rem;
+    line-height: 1.5;
   }
   &__time {
     grid-area: time;
@@ -853,6 +855,46 @@ ol {
   .unconfirmed-wrapper {
     grid-area: unconfirmed;
     padding: 0.5rem 0;
+  }
+}
+.tx-participant {
+  &:not(:last-of-type) {
+    &::after {
+      content: ",";
+    }
+    margin-right: 0.5rem;
+  }
+}
+table {
+  tr {
+    text-align: left;
+    td,
+    th {
+      padding: 0.8rem 0.5rem;
+    }
+    &:nth-child(even) {
+      background-color: rgba(var(--text-color), 0.05);
+    }
+  }
+}
+#in_out_wrapper {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1rem;
+  margin-bottom: 3rem;
+}
+.in-out-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  background-color: rgba(var(--text-color), 0.03);
+  &:not(:last-of-type) {
+    margin-bottom: 0.5rem;
+  }
+  & > :first-child {
+    margin-right: 1rem;
   }
 }
 .fab {

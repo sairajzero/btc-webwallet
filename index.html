@@ -34,16 +34,8 @@
     <div id="main_card">
         <header id="main_header" class="flex align-center space-between">
             <div class="flex align-center">
-                <svg class="icon margin-right-0-3" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24"
-                    height="24px" viewBox="0 0 24 24" width="24px" fill="#000000">
-                    <g>
-                        <rect fill="none" height="24" width="24" />
-                    </g>
-                    <g>
-                        <path
-                            d="M17.06,11.57C17.65,10.88,18,9.98,18,9c0-1.86-1.27-3.43-3-3.87L15,3h-2v2h-2V3H9v2H6v2h2v10H6v2h3v2h2v-2h2v2h2v-2 c2.21,0,4-1.79,4-4C19,13.55,18.22,12.27,17.06,11.57z M10,7h4c1.1,0,2,0.9,2,2s-0.9,2-2,2h-4V7z M15,17h-5v-4h5c1.1,0,2,0.9,2,2 S16.1,17,15,17z" />
-                    </g>
-                </svg>
+                <img src="favicon.svg" alt="Bitcoin Web Wallet" class="icon margin-right-0-3"
+                    style="height: 2rem; width: 2rem;">
                 <h4>Bitcoin Web Wallet</h4>
             </div>
             <div class="flex align-center">
@@ -56,7 +48,7 @@
             </div>
         </header>
         <main id="pages_container" class="grid">
-            <div id="address_details" class="page hidden">
+            <div id="check_details" class="page hidden">
                 <section class="flex margin-bottom-1-5">
                     <button id="gen_new_addr_btn" class="button primary-action interact">
                         <svg class="icon" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24"
@@ -85,10 +77,9 @@
                     </button>
                 </section>
                 <section>
-                    <h4 class="margin-bottom-1">Check balance and transactions</h4>
-                    <sm-form class="flex" style="--gap: 0.5rem;">
-                        <sm-input type="search" id="check_address_input" placeholder="BTC Address" data-btc-address
-                            error-text="Invalid BTC address" required>
+                    <sm-form class="flex margin-bottom-2" style="--gap: 0.5rem;">
+                        <sm-input type="search" id="search_query_input"
+                            placeholder="Search BTC address or transaction ID details" required>
                             <svg slot="icon" class="icon" xmlns="http://www.w3.org/2000/svg" height="24px"
                                 viewBox="0 0 24 24" width="24px" fill="#000000">
                                 <path d="M0 0h24v24H0V0z" fill="none" />
@@ -97,33 +88,36 @@
                             </svg>
                         </sm-input>
                         <button id="check_address_button" class="button button--primary cta" style="height: 3.2rem;"
-                            type="submit" disabled>GO</button>
+                            type="submit" disabled>Search</button>
                     </sm-form>
-                    <div id="address_balance_card" class="grid gap-1 hidden">
-                        <div class="flex">
-                            <svg class="icon margin-right-0-3" xmlns="http://www.w3.org/2000/svg" height="24px"
-                                viewBox="0 0 24 24" width="24px" fill="#000000">
-                                <path d="M0 0h24v24H0V0z" fill="none" />
-                                <path
-                                    d="M21 7.28V5c0-1.1-.9-2-2-2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-2.28c.59-.35 1-.98 1-1.72V9c0-.74-.41-1.37-1-1.72zM20 9v6h-7V9h7zM5 19V5h14v2h-6c-1.1 0-2 .9-2 2v6c0 1.1.9 2 2 2h6v2H5z" />
-                                <circle cx="16" cy="12" r="1.5" />
-                            </svg>
-                            Balance
+                    <div id="address_details" class="hidden">
+                        <div id="address_balance_card" class="grid gap-1 hidden">
+                            <div class="flex">
+                                <svg class="icon margin-right-0-3" xmlns="http://www.w3.org/2000/svg" height="24px"
+                                    viewBox="0 0 24 24" width="24px" fill="#000000">
+                                    <path d="M0 0h24v24H0V0z" fill="none" />
+                                    <path
+                                        d="M21 7.28V5c0-1.1-.9-2-2-2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-2.28c.59-.35 1-.98 1-1.72V9c0-.74-.41-1.37-1-1.72zM20 9v6h-7V9h7zM5 19V5h14v2h-6c-1.1 0-2 .9-2 2v6c0 1.1.9 2 2 2h6v2H5z" />
+                                    <circle cx="16" cy="12" r="1.5" />
+                                </svg>
+                                Balance
+                            </div>
+                            <output id="address_balance" class="amount-shown"></output>
                         </div>
-                        <output id="address_balance" class="amount-shown"></output>
+                        <div class="flex align-center space-between margin-bottom-1 sticky top-0"
+                            style="background-color: rgba(var(--foreground-color), 1);">
+                            <h5>Transactions</h5>
+                            <strip-select id="filter_selector">
+                                <strip-option value="all" selected>All</strip-option>
+                                <strip-option value="sent">Sent</strip-option>
+                                <strip-option value="received">Received</strip-option>
+                            </strip-select>
+                        </div>
+                        <ul id="transactions_list" class="observe-empty-state"></ul>
+                        <div class="empty-state align-self-center text-center">Balance and transactions will appear here
+                        </div>
                     </div>
-                    <div class="flex align-center space-between hidden margin-bottom-1 sticky top-0"
-                        style="background-color: rgba(var(--foreground-color), 1);">
-                        <h5>Transactions</h5>
-                        <strip-select id="filter_selector">
-                            <strip-option value="all" selected>All</strip-option>
-                            <strip-option value="sent">Sent</strip-option>
-                            <strip-option value="received">Received</strip-option>
-                        </strip-select>
-                    </div>
-                    <ul id="transactions_list" class="observe-empty-state"></ul>
-                    <div class="empty-state align-self-center text-center">Balance and transactions will appear here
-                    </div>
+                    <div id="tx_details" class="grid gap-2"></div>
                 </section>
             </div>
             <div id="send" class="page hidden">
@@ -264,7 +258,7 @@
         <nav id="main_navbar">
             <ul id="menu">
                 <li>
-                    <a href="#/address_details" class="nav-item interactive">
+                    <a href="#/check_details" class="nav-item interactive">
                         <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24"
                             width="24px" fill="#000000">
                             <path d="M0 0h24v24H0V0z" fill="none" />
@@ -736,7 +730,7 @@
             let params = {}
             let searchParams
             if (targetPage === '') {
-                pageId = 'address_details'
+                pageId = 'check_details'
             } else {
                 if (targetPage.includes('/')) {
                     if (targetPage.includes('?')) {
@@ -761,8 +755,13 @@
             if (params)
                 pagesData.params = params
             switch (pageId) {
-                case 'address_details':
-                    render.addressDetails(params.address)
+                case 'check_details':
+                    if (params.query) {
+                        const query = getRef('search_query_input').value.trim();
+                        if (params.query !== query)
+                            getRef('search_query_input').value = params.query;
+                        render.queryResult(params.query)
+                    }
                     break;
                 case 'send':
                     getExchangeRate().then(() => {
@@ -1069,25 +1068,24 @@
     </script>
     <script>
         let transactionsLazyLoader
+        let txDetailsAbortController
         const render = {
             transactionCard(transactionDetails) {
                 let { address, amount, time, txid, sender, receiver, type, block } = transactionDetails;
                 let transactionReceiver
                 let icon
                 // block = null
-                if (block) {
-                    if (type === 'out') {
-                        transactionReceiver = `Sent to ${receiver}`;
-                        icon = svg`<svg class="icon sent" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/></svg>`;
-                    } else if (type === 'in') {
-                        transactionReceiver = `Received from ${sender}`;
-                        icon = svg`<svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z"/></svg>`;
-                    } else if (type === 'self') {
-                        transactionReceiver = `Sent to self`;
-                        icon = svg`<svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z"/></svg>`;
-                    }
-                } else {
-                    transactionReceiver = (type === 'out' ? `Sent to ${receiver}` : `Received from ${sender}`);
+                if (type === 'out') {
+                    transactionReceiver = html`Sent to ${receiver.map(address => html`<a href="${`#/check_details?query=${address}`}" class="tx-participant wrap-around">${address}</a>`)}`;
+                    icon = svg`<svg class="icon sent" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/></svg>`;
+                } else if (type === 'in') {
+                    transactionReceiver = html`Received from ${sender.map(address => html`<a href="${`#/check_details?query=${address}`}" class="tx-participant wrap-around">${address}</a>`)}`;
+                    icon = svg`<svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z"/></svg>`;
+                } else if (type === 'self') {
+                    transactionReceiver = `Sent to self`;
+                    icon = svg`<svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z"/></svg>`;
+                }
+                if (!block) {
                     icon = svg`<svg class="icon" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><g><rect fill="none" height="24" width="24"/></g><g><path d="M6,2l0.01,6L10,12l-3.99,4.01L6,22h12v-6l-4-4l4-3.99V2H6z M16,16.5V20H8v-3.5l4-4L16,16.5z"/></g></svg>`;
                 }
                 const className = `transaction grid ${type} ${block === null ? 'unconfirmed-tx' : ''}`
@@ -1095,9 +1093,9 @@
                     <li class="${className}" data-txid="${txid}">
                         <div class="transaction__icon">${icon}</div>
                         <time class="transaction__time">${getFormattedTime(time)}</time>
-                        <div class="transaction__amount amount-shown" data-btc-amount="${amount}">${formatAmount(amount * globalExchangeRate[getRef('currency_selector').value])}</div>
-                        <div class="transaction__receiver wrap-around">${transactionReceiver}</div>
-                        <div class="transaction__id wrap-around">TXID: ${txid}</div>
+                        <div class="transaction__amount amount-shown" data-btc-amount="${amount}">${formatAmount(getConvertedAmount(amount))}</div>
+                        <div class="transaction__receiver">${transactionReceiver}</div>
+                        <div class="transaction__id wrap-around">TXID: <a href="${`#/check_details?query=${txid}`}">${txid}</a></div>
                         ${!block ? html`<p class="pending-badge">Confirmation pending: amount will be deducted after transaction is confirmed</p>` : ''}
                         </li>
                         `;
@@ -1110,15 +1108,15 @@
             },
             async transactions(address) {
                 try {
-                    // render transactions
+                    getRef('address_details').classList.remove('hidden')
                     getRef('transactions_list').innerHTML = '<sm-spinner class="justify-self-center margin-top-1-5"></sm-spinner>';
-                    getRef('check_address_button').disabled = true;
                     getRef('address_balance').innerHTML = '<sm-spinner class="justify-self-center margin-top-1-5"></sm-spinner>';
                     await getExchangeRate();
                     getAddressDetails(address).then(result => {
-                        getRef('address_balance').value = formatAmount(result.balance * globalExchangeRate[getRef('currency_selector').value]);
+                        getRef('address_balance').value = formatAmount(getConvertedAmount(result.balance));
                         getRef('address_balance').dataset.btcAmount = result.balance;
                         getRef('address_balance').parentElement.classList.remove('hidden')
+                        // render transactions
                         if (result.txs.length) {
                             let allTransactions = result.txs;
                             const filter = getRef('filter_selector').value;
@@ -1141,28 +1139,120 @@
                 }
             },
             addressDetails(address) {
-                if (address) {
-                    getRef('check_address_input').value = address
-                    if (btc_api.validateAddress(address)) {
-                        render.transactions(address)
+                getRef('check_address_button').disabled = true;
+                render.transactions(address)
+            },
+            async txDetails(txid) {
+                getRef('tx_details').classList.remove('hidden')
+                renderElem(getRef('tx_details'), html`<sm-spinner class="justify-self-center margin-top-1-5"></sm-spinner>`);
+                await getExchangeRate();
+                if (txDetailsAbortController) {
+                    txDetailsAbortController.abort()
+                }
+                txDetailsAbortController = new AbortController();
+                fetch(`https://chain.so/api/v2/tx/BTC/${txid}`, { signal: txDetailsAbortController.signal }).then(res => res.json()).then(res => {
+                    console.debug(res);
+                    if (res.status === 'success') {
+                        console.debug('tx', res.data);
+                        const { block_no, time, size, fee, inputs, outputs, confirmations } = res.data;
+                        const totalInputs = inputs.reduce((acc, input) => acc + parseFloat(input.value), 0);
+                        const totalOutputs = outputs.reduce((acc, output) => acc + parseFloat(output.value), 0);
+                        renderElem(getRef('tx_details'), html`
+                            <table class="margin-bottom-1-5 justify-self-center">
+                                <tbody>
+                                    <tr>
+                                        <td>Hash</td>
+                                        <td class="wrap-around">${txid}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Block</td>
+                                        <td>${block_no}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Confirmations</td>
+                                        <td>${confirmations}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Size</td>
+                                        <td>${size} bytes</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Time</td>
+                                        <td>${getFormattedTime(time * 1000)}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Total Inputs</td>
+                                        <td class="amount-shown" data-btc-amount="${totalInputs}">${formatAmount(getConvertedAmount(totalInputs))}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Total Outputs</td>
+                                        <td class="amount-shown" data-btc-amount="${totalOutputs}">${formatAmount(getConvertedAmount(totalOutputs))}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Fee</td>
+                                        <td class="amount-shown" data-btc-amount="${fee}">${formatAmount(getConvertedAmount(fee))}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div id="in_out_wrapper" class="flex flex-wrap">
+                                <div>
+                                    <div class="flex align-center space-between margin-bottom-1" style="padding: 0.5rem 1rem;">
+                                        <b>Input addresses</b>
+                                        <b>Value</b>
+                                    </div>
+                                    <ul>
+                                        ${inputs.map(input => html`
+                                            <li class="in-out-card">
+                                                <a href="${`#/check_details?query=${input.address}`}" class="input-address wrap-around">${input.address}</a>
+                                                <div class="input-value amount-shown" data-btc-amount="${input.value}">${formatAmount(getConvertedAmount(input.value))}</div>
+                                            </li>
+                                        `)}
+                                    </ul>
+                                </div>
+                                <div>
+                                    <div class="flex align-center space-between margin-bottom-1" style="padding: 0.5rem 1rem;">
+                                        <b>Output addresses</b>
+                                        <b>Value</b>
+                                    </div>
+                                    <ul>
+                                        ${outputs.map(output => html`
+                                            <li class="in-out-card">
+                                                <a href="${`#/check_details?query=${output.address}`}" class="output-address wrap-around">${output.address}</a>
+                                                <div class="output-value amount-shown" data-btc-amount="${output.value}">${formatAmount(getConvertedAmount(output.value))}</div>
+                                            </li>
+                                        `)}
+                                    </ul>
+                                </div>
+                            </div>
+                            `)
                     } else {
-                        getRef('address_balance').parentElement.classList.add('hidden')
-                        getRef('transactions_list').previousElementSibling.classList.add('hidden');
-                        if (transactionsLazyLoader) {
-                            transactionsLazyLoader.clear()
-                            transactionsLazyLoader = null
-                        }
+                        notify(res.data.message, 'error')
                     }
-                } else {
-                    getRef('check_address_button').disabled = true;
-                    getRef('address_balance').parentElement.classList.add('hidden')
-                    getRef('transactions_list').previousElementSibling.classList.add('hidden');
-
-                    getRef('check_address_input').value = ''
+                }).catch(err => {
+                    notify(err, 'error')
+                    renderElem(getRef('tx_details'), html``)
+                })
+            },
+            queryResult(query) {
+                const type = checkQueryStringType(query);
+                if (type === 'address') {
+                    getRef('tx_details').classList.add('hidden')
+                    render.addressDetails(query)
+                } else if (type === 'txid') {
+                    getRef('address_details').classList.add('hidden')
+                    render.txDetails(query)
                     if (transactionsLazyLoader) {
                         transactionsLazyLoader.clear()
                         transactionsLazyLoader = null
                     }
+                } else {
+                    if (transactionsLazyLoader) {
+                        transactionsLazyLoader.clear()
+                        transactionsLazyLoader = null
+                    }
+                    getRef('address_details').classList.add('hidden')
+                    getRef('tx_details').classList.add('hidden')
+                    notify('Invalid address or transaction id', 'error');
                 }
             }
         }
@@ -1171,13 +1261,45 @@
             usd: `<svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>`,
             inr: `<svg class="icon" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><g><rect fill="none" height="24" width="24"/></g><g><g><path d="M13.66,7C13.1,5.82,11.9,5,10.5,5L6,5V3h12v2l-3.26,0c0.48,0.58,0.84,1.26,1.05,2L18,7v2l-2.02,0c-0.25,2.8-2.61,5-5.48,5 H9.77l6.73,7h-2.77L7,14v-2h3.5c1.76,0,3.22-1.3,3.46-3L6,9V7L13.66,7z"/></g></g></svg>`
         }
+        function formatAmount(amount = 0) {
+            // check if amount is a string and convert it to a number
+            if (typeof amount === 'string') {
+                amount = parseFloat(amount)
+            }
+            const currency = getRef('currency_selector').value;
+            if (!amount)
+                return '0';
+            return amount.toLocaleString(currency === 'inr' ? `en-IN` : 'en-US', { style: 'currency', currency, maximumFractionDigits: currency === 'btc' ? 8 : 2 })
+        }
+        let globalExchangeRate = {}
+        async function getExchangeRate() {
+            return new Promise((resolve, reject) => {
+                Promise.all(['usd', 'inr'].map(cur => fetch(`https://bitpay.com/api/rates/btc/${cur}`))).then(responses => {
+                    Promise.all(responses.map(res => res.json())).then(rates => {
+                        rates.forEach(rate => {
+                            globalExchangeRate[rate.code.toLowerCase()] = rate.rate
+                        })
+                        globalExchangeRate.btc = 1
+                        resolve(globalExchangeRate)
+                    }).catch(err => console.log(err))
+                }).catch(err => console.log(err))
+            })
+        }
+        function getConvertedAmount(amount) {
+            // check if amount is a string and convert it to a number
+            if (typeof amount === 'string') {
+                amount = parseFloat(amount)
+            }
+            const result = parseFloat((amount * globalExchangeRate[getRef('currency_selector').value]).toFixed(8))
+            return result
+        }
         function calculateFee() {
             fetch('https://bitcoiner.live/api/fees/estimates/latest').then(res => res.json()).then(data => {
                 const satPerByte = data.estimates['60'].sat_per_vbyte;
                 const legacyBytes = 200;
                 const segwitBytes = 77;
                 const fees = (legacyBytes * satPerByte + (0.25 * satPerByte) * segwitBytes) / Math.pow(10, 8);
-                getRef('send_fee').value = parseFloat((fees * globalExchangeRate[getRef('currency_selector').value]).toFixed(8));
+                getRef('send_fee').value = getConvertedAmount(fees);
             }).catch(e => {
                 console.error(e)
             })
@@ -1188,12 +1310,12 @@
             localStorage.setItem('btc-wallet-currency', e.target.value);
             document.querySelectorAll('.currency-symbol').forEach(el => el.innerHTML = currencyIcons[e.target.value])
             document.querySelectorAll('.amount-shown').forEach(el => {
-                el.textContent = formatAmount(parseFloat(el.dataset.btcAmount) * globalExchangeRate[getRef('currency_selector').value])
+                el.textContent = formatAmount(getConvertedAmount(el.dataset.btcAmount))
             })
             calculateFee();
         })
         getRef('filter_selector').addEventListener('change', async e => {
-            const address = getRef('check_address_input').value;
+            const address = getRef('search_query_input').value;
             render.transactions(address)
         })
         getRef('gen_new_addr_btn').addEventListener('click', () => {
@@ -1289,26 +1411,6 @@
                 e.target.closest('.card').remove()
             }
         })
-        function formatAmount(amount = 0) {
-            const currency = getRef('currency_selector').value;
-            if (!amount)
-                return '0';
-            return amount.toLocaleString(currency === 'inr' ? `en-IN` : 'en-US', { style: 'currency', currency, maximumFractionDigits: currency === 'btc' ? 8 : 2 })
-        }
-        let globalExchangeRate = {}
-        async function getExchangeRate() {
-            return new Promise((resolve, reject) => {
-                Promise.all(['usd', 'inr'].map(cur => fetch(`https://bitpay.com/api/rates/btc/${cur}`))).then(responses => {
-                    Promise.all(responses.map(res => res.json())).then(rates => {
-                        rates.forEach(rate => {
-                            globalExchangeRate[rate.code.toLowerCase()] = rate.rate
-                        })
-                        globalExchangeRate.btc = 1
-                        resolve(globalExchangeRate)
-                    }).catch(err => console.log(err))
-                }).catch(err => console.log(err))
-            })
-        }
         getRef('check_balance').onclick = async evt => {
             const addresses = [...getRef('sender_container').querySelectorAll('.sender-input')].filter(input => input.value.trim() !== '').map(input => input.value.trim())
             if (addresses.length === 0) {
@@ -1324,11 +1426,11 @@
                 await getExchangeRate();
                 const balances = await Promise.all(addresses.map((addr, index) => btc_api.getBalance(addr)))
                 balances.forEach((result, index) => {
-                    senderBalances[index].textContent = formatAmount(result * globalExchangeRate[getRef('currency_selector').value]);
+                    senderBalances[index].textContent = formatAmount(getConvertedAmount(result));
                     senderBalances[index].dataset.btcAmount = result;
                     totalBalance += result;
                 })
-                getRef("total_balance").textContent = `${formatAmount(totalBalance * globalExchangeRate[getRef('currency_selector').value])}`;
+                getRef("total_balance").textContent = `${formatAmount(getConvertedAmount(totalBalance))}`;
                 getRef("total_balance").dataset.btcAmount = totalBalance;
             } catch (e) {
                 notify(e, 'error');
@@ -1396,12 +1498,26 @@
 
         }
 
-        getRef('check_address_button').addEventListener('click', evt => {
-            const address = getRef('check_address_input').value;
-            if (pagesData.params.hasOwnProperty('address') && address === pagesData.params.address) {
-                render.addressDetails(address)
+        // detect if given string is a bitcoin transaction id
+        function isTxId(str) {
+            return str.length === 64 && str.match(/^[0-9a-f]+$/i);
+        }
+        //  detect if given string is a bitcoin address or transaction id
+        function checkQueryStringType(str) {
+            if (btc_api.validateAddress(str)) {
+                return 'address';
+            } else if (isTxId(str)) {
+                return 'txid';
             } else {
-                location.hash = `#/address_details?address=${address}`;
+                return 'invalid';
+            }
+        }
+        getRef('check_address_button').addEventListener('click', evt => {
+            const query = getRef('search_query_input').value.trim();
+            if (pagesData.params.hasOwnProperty('query') && query === pagesData.params.query) {
+                render.queryResult(query);
+            } else {
+                location.hash = `#/check_details?query=${query}`;
             }
         })
 
