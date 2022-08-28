@@ -1515,16 +1515,15 @@
                         console.error(e)
                     })
                 }).catch(error => {
+                    console.error(error)
                     notify(`Error sending transaction \n ${error}`, 'error');
                 }).finally(_ => {
                     buttonLoader('send_transaction', false)
                 })
             }).catch(err => {
                 notify(err, 'error')
-            }).finally(() => {
                 buttonLoader('send_transaction', false)
             })
-
         }
 
         // detect if given string is a bitcoin transaction id
