@@ -2627,6 +2627,7 @@
 
         coinjs.compressedToUncompressed = function (compressed) {
             var t1, t2;
+            var curve = EllipticCurve.getSECCurveByName("secp256k1");
             t1 = curve.curve.decodePointHex(compressed);
             t2 = curve.curve.encodePointHex(t1);
             return t2;
