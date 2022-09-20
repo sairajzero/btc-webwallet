@@ -2604,6 +2604,52 @@
             return count;
         }
 
+//Five utility functions added for generating transaction hashes and verification of signatures
+    var coinjs.changeEndianness = (string) => {
+        const result = [];
+        let len = string.length - 2;
+        while (len >= 0) {
+          result.push(string.substr(len, 2));
+          len -= 2;
+        }
+        return result.join('');
+        }
+
+    coinjs.getTransactionHash = function (transaction_in_hex) {
+        var x1,x2,x3,x4,x5;
+        x1 = Crypto.util.hexToBytes(transaction_in_hex);
+        x2 = Crypto.SHA256(x1);
+        x3 = Crypto.util.hexToBytes(x2);
+        x4 = Crypto.SHA256(x3);
+        x5 = coinjs.changeEndianness(x4);
+        return x5;
+        }    
+
+    coinjs.compressedToUncompressed = function (compressed) {
+        var t1,t2;
+        t1 = curve.curve.decodePointHex(compressed);
+        t2 = curve.curve.encodePointHex(t1);
+        return t2;
+        }
+
+    coinjs.uncompressedToCompressed = function (uncompressed) {
+        var t1,t2,t3;
+        t1 = uncompressed.charAt(uncompressed.length-1)
+        t2 = parseInt(t1,10);
+        //Check if the last digit is odd
+        if(t2 % 2 == 1) { t3 = "03";} else { t3 = "02" };
+        return t3+ uncompressed.substr(2,64);
+    }
+    
+  	coinjs.verifySignatureHex = function (hashHex,sigHex,pubHexCompressed){
+        var h1,s1,p1,p2;
+        h1 = Crypto.util.hexToBytes(hashHex);
+        s1 = Crypto.util.hexToBytes(sigHex);
+        p1 = coinjs.compressedToUncompressed(pubHexCompressed);
+        p2 = Crypto.util.hexToBytes(p1);
+        
+        return coinjs.verifySignature(h1,s1,p2);
+        }
         coinjs.random = function (length) {
             var r = "";
             var l = length || 25;
@@ -2790,54 +2836,7 @@
         bytes.unshift(version)
         return coinjs.bech32_encode(hrp, bytes);
     }
-   
-    //Five utility functions added for generating transaction hashes and verification of signatures
-    var changeEndianness = (string) => {
-        const result = [];
-        let len = string.length - 2;
-        while (len >= 0) {
-          result.push(string.substr(len, 2));
-          len -= 2;
-        }
-        return result.join('');
-        }
-
-    function getTransactionHash(transaction_in_hex) {
-        var x1,x2,x3,x4,x5;
-        x1 = Crypto.util.hexToBytes(transaction_in_hex);
-        x2 = Crypto.SHA256(x1);
-        x3 = Crypto.util.hexToBytes(x2);
-        x4 = Crypto.SHA256(x3);
-        x5 = changeEndianness(x4);
-        return x5;
-        }    
-
-    function compressedToUncompressed(compressed) {
-        var t1,t2;
-        t1 = curve.curve.decodePointHex(compressed);
-        t2 = curve.curve.encodePointHex(t1);
-        return t2;
-        }
-
-    function uncompressedToCompressed(uncompressed) {
-        var t1,t2,t3;
-        t1 = uncompressed.charAt(uncompressed.length-1)
-        t2 = parseInt(t1,10);
-        //Check if the last digit is odd
-        if(t2 % 2 == 1) { t3 = "03";} else { t3 = "02" };
-        return t3+ uncompressed.substr(2,64);
-    }
-    
-   function verifySignatureHex(hashHex,sigHex,pubHexCompressed){
-        var h1,s1,p1,p2;
-        h1 = Crypto.util.hexToBytes(hashHex);
-        s1 = Crypto.util.hexToBytes(sigHex);
-        p1 = compressedToUncompressed(pubHexCompressed);
-        p2 = Crypto.util.hexToBytes(p1);
-        
-        return coinjs.verifySignature(h1,s1,p2);
-        }
-    
+       
     btc_api.getBalance = addr => new Promise((resolve, reject) => {
         fetch_api(`get_address_balance/BTC/${addr}`)
             .then(result => resolve(parseFloat(result.data.confirmed_balance)))
