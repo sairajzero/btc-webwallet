@@ -2204,63 +2204,63 @@
                 buffer = buffer.concat(coinjs.numToBytes(parseInt(this.lock_time), 4));
                 return Crypto.util.bytesToHex(buffer);
             }
-            
+
             //Utility funtion added to directly compute signatures without transaction index
-            r.transactionSigNoIndex = function(wif, sigHashType, txhash){
+            r.transactionSigNoIndex = function (wif, sigHashType, txhash) {
 
-			function serializeSig(r, s) {
-				var rBa = r.toByteArraySigned();
-				var sBa = s.toByteArraySigned();
+                function serializeSig(r, s) {
+                    var rBa = r.toByteArraySigned();
+                    var sBa = s.toByteArraySigned();
 
-				var sequence = [];
-				sequence.push(0x02); // INTEGER
-				sequence.push(rBa.length);
-				sequence = sequence.concat(rBa);
+                    var sequence = [];
+                    sequence.push(0x02); // INTEGER
+                    sequence.push(rBa.length);
+                    sequence = sequence.concat(rBa);
 
-				sequence.push(0x02); // INTEGER
-				sequence.push(sBa.length);
-				sequence = sequence.concat(sBa);
+                    sequence.push(0x02); // INTEGER
+                    sequence.push(sBa.length);
+                    sequence = sequence.concat(sBa);
 
-				sequence.unshift(sequence.length);
-				sequence.unshift(0x30); // SEQUENCE
+                    sequence.unshift(sequence.length);
+                    sequence.unshift(0x30); // SEQUENCE
 
-				return sequence;
-			}
+                    return sequence;
+                }
 
-			var shType = sigHashType || 1;
-			var hash = Crypto.util.hexToBytes(txhash);
+                var shType = sigHashType || 1;
+                var hash = Crypto.util.hexToBytes(txhash);
 
-			if(hash){
-				var curve = EllipticCurve.getSECCurveByName("secp256k1");
-				var key = coinjs.wif2privkey(wif);
-				var priv = BigInteger.fromByteArrayUnsigned(Crypto.util.hexToBytes(key['privkey']));
-				var n = curve.getN();
-				var e = BigInteger.fromByteArrayUnsigned(hash);
+                if (hash) {
+                    var curve = EllipticCurve.getSECCurveByName("secp256k1");
+                    var key = coinjs.wif2privkey(wif);
+                    var priv = BigInteger.fromByteArrayUnsigned(Crypto.util.hexToBytes(key['privkey']));
+                    var n = curve.getN();
+                    var e = BigInteger.fromByteArrayUnsigned(hash);
 
-				var badrs = 0
-				do {
-					var k = this.deterministicK(wif, hash, badrs);
-					var G = curve.getG();
-					var Q = G.multiply(k);
-					var r = Q.getX().toBigInteger().mod(n);
-					var s = k.modInverse(n).multiply(e.add(priv.multiply(r))).mod(n);
-					badrs++
-				} while (r.compareTo(BigInteger.ZERO) <= 0 || s.compareTo(BigInteger.ZERO) <= 0);
+                    var badrs = 0
+                    do {
+                        var k = this.deterministicK(wif, hash, badrs);
+                        var G = curve.getG();
+                        var Q = G.multiply(k);
+                        var r = Q.getX().toBigInteger().mod(n);
+                        var s = k.modInverse(n).multiply(e.add(priv.multiply(r))).mod(n);
+                        badrs++
+                    } while (r.compareTo(BigInteger.ZERO) <= 0 || s.compareTo(BigInteger.ZERO) <= 0);
 
-				// Force lower s values per BIP62
-				var halfn = n.shiftRight(1);
-				if (s.compareTo(halfn) > 0) {
-					s = n.subtract(s);
-				};
+                    // Force lower s values per BIP62
+                    var halfn = n.shiftRight(1);
+                    if (s.compareTo(halfn) > 0) {
+                        s = n.subtract(s);
+                    };
 
-				var sig = serializeSig(r, s);
-				sig.push(parseInt(shType, 10));
+                    var sig = serializeSig(r, s);
+                    sig.push(parseInt(shType, 10));
 
-				return Crypto.util.bytesToHex(sig);
-			} else {
-				return false;
-			    }
-		    } 
+                    return Crypto.util.bytesToHex(sig);
+                } else {
+                    return false;
+                }
+            }
 
             /* deserialize a transaction */
             r.deserialize = function (buffer) {
@@ -2604,51 +2604,51 @@
             return count;
         }
 
-//Five utility functions added for generating transaction hashes and verification of signatures
-    var coinjs.changeEndianness = (string) => {
-        const result = [];
-        let len = string.length - 2;
-        while (len >= 0) {
-          result.push(string.substr(len, 2));
-          len -= 2;
-        }
-        return result.join('');
-        }
-
-    coinjs.getTransactionHash = function (transaction_in_hex) {
-        var x1,x2,x3,x4,x5;
-        x1 = Crypto.util.hexToBytes(transaction_in_hex);
-        x2 = Crypto.SHA256(x1);
-        x3 = Crypto.util.hexToBytes(x2);
-        x4 = Crypto.SHA256(x3);
-        x5 = coinjs.changeEndianness(x4);
-        return x5;
-        }    
-
-    coinjs.compressedToUncompressed = function (compressed) {
-        var t1,t2;
-        t1 = curve.curve.decodePointHex(compressed);
-        t2 = curve.curve.encodePointHex(t1);
-        return t2;
+        //Five utility functions added for generating transaction hashes and verification of signatures
+        coinjs.changeEndianness = (string) => {
+            const result = [];
+            let len = string.length - 2;
+            while (len >= 0) {
+                result.push(string.substr(len, 2));
+                len -= 2;
+            }
+            return result.join('');
         }
 
-    coinjs.uncompressedToCompressed = function (uncompressed) {
-        var t1,t2,t3;
-        t1 = uncompressed.charAt(uncompressed.length-1)
-        t2 = parseInt(t1,10);
-        //Check if the last digit is odd
-        if(t2 % 2 == 1) { t3 = "03";} else { t3 = "02" };
-        return t3+ uncompressed.substr(2,64);
-    }
-    
-  	coinjs.verifySignatureHex = function (hashHex,sigHex,pubHexCompressed){
-        var h1,s1,p1,p2;
-        h1 = Crypto.util.hexToBytes(hashHex);
-        s1 = Crypto.util.hexToBytes(sigHex);
-        p1 = coinjs.compressedToUncompressed(pubHexCompressed);
-        p2 = Crypto.util.hexToBytes(p1);
-        
-        return coinjs.verifySignature(h1,s1,p2);
+        coinjs.getTransactionHash = function (transaction_in_hex) {
+            var x1, x2, x3, x4, x5;
+            x1 = Crypto.util.hexToBytes(transaction_in_hex);
+            x2 = Crypto.SHA256(x1);
+            x3 = Crypto.util.hexToBytes(x2);
+            x4 = Crypto.SHA256(x3);
+            x5 = coinjs.changeEndianness(x4);
+            return x5;
+        }
+
+        coinjs.compressedToUncompressed = function (compressed) {
+            var t1, t2;
+            t1 = curve.curve.decodePointHex(compressed);
+            t2 = curve.curve.encodePointHex(t1);
+            return t2;
+        }
+
+        coinjs.uncompressedToCompressed = function (uncompressed) {
+            var t1, t2, t3;
+            t1 = uncompressed.charAt(uncompressed.length - 1)
+            t2 = parseInt(t1, 10);
+            //Check if the last digit is odd
+            if (t2 % 2 == 1) { t3 = "03"; } else { t3 = "02" };
+            return t3 + uncompressed.substr(2, 64);
+        }
+
+        coinjs.verifySignatureHex = function (hashHex, sigHex, pubHexCompressed) {
+            var h1, s1, p1, p2;
+            h1 = Crypto.util.hexToBytes(hashHex);
+            s1 = Crypto.util.hexToBytes(sigHex);
+            p1 = coinjs.compressedToUncompressed(pubHexCompressed);
+            p2 = Crypto.util.hexToBytes(p1);
+
+            return coinjs.verifySignature(h1, s1, p2);
         }
         coinjs.random = function (length) {
             var r = "";
@@ -2836,7 +2836,7 @@
         bytes.unshift(version)
         return coinjs.bech32_encode(hrp, bytes);
     }
-       
+
     btc_api.getBalance = addr => new Promise((resolve, reject) => {
         fetch_api(`get_address_balance/BTC/${addr}`)
             .then(result => resolve(parseFloat(result.data.confirmed_balance)))
