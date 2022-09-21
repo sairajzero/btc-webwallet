@@ -2651,6 +2651,11 @@
 
             return coinjs.verifySignature(h1, s1, p2);
         }
+
+        coinjs.dSHA256 = function(data){
+            return Crypto.SHA256(Crypto.util.hexToBytes(Crypto.SHA256(data))); 
+        }
+
         coinjs.random = function (length) {
             var r = "";
             var l = length || 25;
