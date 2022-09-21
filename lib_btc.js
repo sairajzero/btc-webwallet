@@ -2615,13 +2615,14 @@
             return result.join('');
         }
 
-        coinjs.getTransactionHash = function (transaction_in_hex) {
+        coinjs.getTransactionHash = function (transaction_in_hex,changeOutputEndianess) {
             var x1, x2, x3, x4, x5;
             x1 = Crypto.util.hexToBytes(transaction_in_hex);
             x2 = Crypto.SHA256(x1);
             x3 = Crypto.util.hexToBytes(x2);
             x4 = Crypto.SHA256(x3);
             x5 = coinjs.changeEndianness(x4);
+            if (changeOutputEndianess == true) { x5 = x5 } else if ((typeof changeOutputEndianess == 'undefined') || (changeOutputEndianess == false) ){ x5 = x4 };
             return x5;
         }
 
