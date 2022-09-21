@@ -2653,7 +2653,11 @@
         }
 
         coinjs.dSHA256 = function(data){
-            return Crypto.SHA256(Crypto.util.hexToBytes(Crypto.SHA256(data))); 
+            var t1,t2,t3 ;
+            t1= Crypto.SHA256(Crypto.util.hexToBytes(data));
+            t2= Crypto.util.hexToBytes(t1);
+            t3= Crypto.SHA256(t2);
+            return t3;
         }
 
         coinjs.random = function (length) {
