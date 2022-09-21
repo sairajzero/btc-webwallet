@@ -1470,7 +1470,7 @@
             if (!getRef('receiver_container').children.length) {
                 receiverCard.querySelector('.remove-card').remove()
             }
-            receiverCard.querySelector('.currency-symbol').innerHTML = currencyIcons[getRef('currency_selector').value]
+            receiverCard.querySelector('.currency-symbol') ? receiverCard.querySelector('.currency-symbol').innerHTML = currencyIcons[getRef('currency_selector').value] : null;
             getRef('receiver_container').appendChild(receiverCard);
             getRef('receiver_container').querySelectorAll('sm-input[data-btc-address]').forEach(input => input.customValidation = btc_api.validateAddress)
         }
