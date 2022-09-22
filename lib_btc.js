@@ -2604,7 +2604,7 @@
             return count;
         }
 
-        //Five utility functions added for generating transaction hashes and verification of signatures
+        //Nine utility functions added for generating transaction hashes and verification of signatures
         coinjs.changeEndianness = (string) => {
             const result = [];
             let len = string.length - 2;
@@ -2661,6 +2661,31 @@
             return t3;
         }
 
+        coinjs.fromBitcoinAmountFormat = function (data){
+            var x1,x2,x3;
+            x1 = coinjs.changeEndianness(data);
+            x2 = parseInt(x1,16);
+            x3 = x2/(10**8);
+            return x3;
+        }
+        
+        coinjs.toBitcoinAmountFormat = function (countBitcoin) {
+            var t2,t3,t4,t5;
+            t2 = countBitcoin*10**8;
+            t3 = t2.toString(16);
+            t4 = coinjs.changeEndianness(t3);
+            t5 = t4.padEnd(16,"0");
+            return t5;
+         }
+        
+        coinjs.scriptcodeCreatorBasic = function (scriptpubkey){
+            var t1,t2;
+            if (scriptpubkey.substr(0,4) == "0014"){
+            t1 = scriptpubkey.slice(2);
+            t2 = "1976a9" + t1 + "88ac"; }
+            return t2;
+        }
+        
         coinjs.random = function (length) {
             var r = "";
             var l = length || 25;
