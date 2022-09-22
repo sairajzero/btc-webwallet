@@ -2678,10 +2678,10 @@
             return t5;
          }
         
-        coinjs.scriptcodeCreatorBasic = function (scriptpubkey){
+        coinjs.scriptcodeCreatorBasic = function (redeemscript){
             var t1,t2;
-            if (scriptpubkey.substr(0,4) == "0014"){
-            t1 = scriptpubkey.slice(2);
+            if (redeemscript.substr(0,4) == "0014"){
+            t1 = redeemscript.slice(2);
             t2 = "1976a9" + t1 + "88ac"; }
             return t2;
         }
