@@ -2678,11 +2678,19 @@
             return t5;
          }
         
-        coinjs.scriptcodeCreatorBasic = function (redeemscript){
+       coinjs.scriptcodeCreatorBasic = function (redeemscript){
             var t1,t2;
             if (redeemscript.substr(0,4) == "0014"){
             t1 = redeemscript.slice(2);
             t2 = "1976a9" + t1 + "88ac"; }
+            return t2;
+        }
+        
+       coinjs.ripemd160sha256 = function (data) {
+            var t1,t2;
+
+            t1 = ripemd160(Crypto.SHA256(Crypto.util.hexToBytes(data), {asBytes: true}), {asBytes: true});
+            t2 = Crypto.util.bytesToHex(t1)
             return t2;
         }
         
