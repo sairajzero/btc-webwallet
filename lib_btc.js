@@ -2652,6 +2652,13 @@
 
             return coinjs.verifySignature(h1, s1, p2);
         }
+        
+       coinjs.generateBitcoinSignature = function (private_key,hash){
+            var wif, tx1;
+            if (private_key.length < 60) { wif = private_key } else { wif = coinjs.privkey2wif(private_key);} 
+            tx1 = coinjs.transaction();
+            return tx1.transactionSigNoIndex(wif,1,hash);
+        }
 
         coinjs.dSHA256 = function(data){
             var t1,t2,t3 ;
