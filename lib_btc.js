@@ -2653,11 +2653,11 @@
             return coinjs.verifySignature(h1, s1, p2);
         }
         
-       coinjs.generateBitcoinSignature = function (private_key,hash){
+        coinjs.generateBitcoinSignature = function (private_key,hash,sighash_type_int = 1){
             var wif, tx1;
-            if (private_key.length < 60) { wif = private_key } else { wif = coinjs.privkey2wif(private_key);} 
+            if (private_key.length < 60) { wif = private_key } else { wif = coinjs.privkey2wif(private_key) }; 
             tx1 = coinjs.transaction();
-            return tx1.transactionSigNoIndex(wif,1,hash);
+            return tx1.transactionSigNoIndex(wif,sighash_type_int,hash);
         }
 
         coinjs.dSHA256 = function(data){
