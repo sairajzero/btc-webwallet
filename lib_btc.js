@@ -2685,11 +2685,17 @@
             return t5;
          }
         
-       coinjs.scriptcodeCreatorBasic = function (redeemscript){
-            var t1,t2;
-            if (redeemscript.substr(0,4) == "0014"){
-            t1 = redeemscript.slice(2);
-            t2 = "1976a9" + t1 + "88ac"; }
+        coinjs.scriptcodeCreatorBasic = function (scriptpubkey){
+            var t1,t2,t3,t4;
+            if (scriptpubkey.substr(0,4) == "0014"){
+            //Scriptpubkey case
+            t1 = scriptpubkey.slice(2);
+            t2 = "1976a9" + t1 + "88ac"; } else {
+            //Redeemscript case
+            t3 = (scriptpubkey.length)/2;
+            t4 = t3.toString(16);
+            t2 = t4 + scriptpubkey;
+            }
             return t2;
         }
         
