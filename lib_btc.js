@@ -443,6 +443,18 @@
             };
         }
 
+        //Return a Bech32 address for the multisig. Format is same as above
+        coinjs.pubkeys2MultisigAddressBech32 = function (pubkeys, required){
+            var t1,t2,t3;
+            t1 = coinjs.pubkeys2MultisigAddress(pubkeys, required);
+            t2 = Crypto.SHA256(Crypto.util.hexToBytes(t1.redeemScript));
+            t3 = btc_api.encodeBech32(t2,0,"bc");
+            return {
+                'address': t3,
+                'redeemScript': t1.redeemScript,
+                'size': t1.size
+            };
+}
         /* new time locked address, provide the pubkey and time necessary to unlock the funds.
            when time is greater than 500000000, it should be a unix timestamp (seconds since epoch),
            otherwise it should be the block height required before this transaction can be released. 
