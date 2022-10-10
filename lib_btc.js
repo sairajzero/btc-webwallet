@@ -2873,7 +2873,7 @@
         return coinjs.base58encode(bytes.concat(checksum));
     }
 
-    function decodeBech32(source) {
+    decodeBech32 = btc_api.decodeBech32 = function (source) {
         let decode = coinjs.bech32_decode(source);
         if (!decode)
             return null;
@@ -2887,7 +2887,7 @@
         }
     }
 
-    function encodeBech32(hex, version, hrp) {
+    encodeBech32 = btc_api.encodeBech32 = function (hex, version, hrp) {
         var bytes = Crypto.util.hexToBytes(hex);
         bytes = coinjs.bech32_convert(bytes, 8, 5, true);
         bytes.unshift(version)
