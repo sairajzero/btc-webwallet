@@ -454,7 +454,8 @@
                 'redeemScript': t1.redeemScript,
                 'size': t1.size
             };
-}
+        }
+        
         /* new time locked address, provide the pubkey and time necessary to unlock the funds.
            when time is greater than 500000000, it should be a unix timestamp (seconds since epoch),
            otherwise it should be the block height required before this transaction can be released. 
