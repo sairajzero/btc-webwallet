@@ -1306,6 +1306,34 @@
                 return r;
             }
 
+            /* decode the redeemscript of a multisignature transaction for Bech32*/
+            r.decodeRedeemScriptBech32 = function (script) {
+                var r = false;
+                try {
+                    var s = coinjs.script(Crypto.util.hexToBytes(script));
+                    if ((s.chunks.length >= 3) && s.chunks[s.chunks.length - 1] == 174) { //OP_CHECKMULTISIG
+                        r = {};
+                        r.signaturesRequired = s.chunks[0] - 80;
+                        var pubkeys = [];
+                        for (var i = 1; i < s.chunks.length - 2; i++) {
+                            pubkeys.push(Crypto.util.bytesToHex(s.chunks[i]));
+                        }
+                        r.pubkeys = pubkeys;
+                        var multi = coinjs.pubkeys2MultisigAddressBech32(pubkeys, r.signaturesRequired);
+                        r.address = multi['address'];
+                        r.type = 'multisig__'; // using __ for now to differentiat from the other object .type == "multisig"
+                        var rs = Crypto.util.bytesToHex(s.buffer);
+                        r.redeemscript = rs;
+
+                    } 
+
+                } catch (e) {
+                    // console.log(e);
+                    r = false;
+                }
+                return r;
+            }
+            
             /* create output script to spend */
             r.spendToScript = function (address) {
                 var addr = coinjs.addressDecode(address);
