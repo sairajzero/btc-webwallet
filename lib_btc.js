@@ -544,7 +544,20 @@
                 'redeemscript': Crypto.util.bytesToHex(program)
             };
         }
+       
+        coinjs.multisigBech32Address = function (raw_redeemscript) {
+           var t1,t2;
 
+           t1 = Crypto.SHA256(Crypto.util.hexToBytes(raw_redeemscript));
+           t2 = btc_api.encodeBech32(t1,0,"bc");
+
+            return {
+                'address': t2,
+                'type': 'multisigBech32',
+                'redeemscript': t1
+            };
+        }
+        
         /* extract the redeemscript from a bech32 address */
         coinjs.bech32redeemscript = function (address) {
             var r = false;
@@ -555,7 +568,7 @@
             }
             return r;
         }
-
+       
         /* provide a privkey and return an WIF  */
         coinjs.privkey2wif = function (h) {
             var r = Crypto.util.hexToBytes(h);
