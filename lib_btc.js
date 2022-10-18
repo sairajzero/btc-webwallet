@@ -635,6 +635,9 @@
 
                     } else if (o.version == coinjs.multisig) { // multisig address
                         o.type = 'multisig';
+                    
+                    } else if (o.version == coinjs.multisigBech32) { // multisig address
+                        o.type = 'multisigBech32';    
 
                     } else if (o.version == coinjs.priv) { // wifkey
                         o.type = 'wifkey';
@@ -2835,7 +2838,7 @@
         if (!addr)
             return undefined;
         let type = coinjs.addressDecode(addr).type;
-        if (["standard", "multisig", "bech32"].includes(type))
+        if (["standard", "multisig", "bech32", "multisigBech32"].includes(type))
             return type;
         else
             return false;
