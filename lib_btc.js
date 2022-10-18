@@ -613,7 +613,6 @@
             };
         }
 
-        /* decode or validate an address and return the hash */
         coinjs.addressDecode = function (addr) {
             try {
                 var bytes = coinjs.base58decode(addr);
@@ -635,9 +634,9 @@
 
                     } else if (o.version == coinjs.multisig) { // multisig address
                         o.type = 'multisig';
-                    
-                    } else if (o.version == coinjs.multisigBech32) { // multisig address
-                        o.type = 'multisigBech32';    
+                        
+                    } else if (o.version == coinjs.multisigBech32) { // multisigBech32 added
+                        o.type = 'multisigBech32';                          
 
                     } else if (o.version == coinjs.priv) { // wifkey
                         o.type = 'wifkey';
@@ -679,9 +678,14 @@
                 }
             } catch (e) {
                 bech32rs = coinjs.bech32redeemscript(addr);
-                if (bech32rs) {
+                if (bech32rs.length == 40) {
                     return {
                         'type': 'bech32',
+                        'redeemscript': bech32rs
+                    };
+                } else if (bech32rs.length == 64 ) {
+                    return {
+                        'type': 'multisigBech32',
                         'redeemscript': bech32rs
                     };
                 } else {
