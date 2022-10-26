@@ -238,18 +238,28 @@
                         <p class="panel-footer">Convert address: BTC &#x21D4; FLO</p>
                     </div>
                     <div class="grid gap-0-5">
-                        <sm-input id="convert_btc_input" placeholder="BTC Address" data-btc-address
-                            error-text="Invalid BTC address" animate required></sm-input>
-                        <button id="convert_flo_btc" class="button--primary justify-self-center">
-                            <svg class="icon margin-right-0-5" xmlns="http://www.w3.org/2000/svg" height="24px"
-                                viewBox="0 0 24 24" width="24px" fill="#000000">
-                                <path d="M0 0h24v24H0z" fill="none" />
-                                <path d="M16 17.01V10h-2v7.01h-3L15 21l4-3.99h-3zM9 3L5 6.99h3V14h2V6.99h3L9 3z" />
-                            </svg>
-                            Convert
-                        </button>
-                        <sm-input id="convert_flo_input" placeholder="FLO Address" animate></sm-input>
-                        <div class="flex align-center">
+                        <div class="flex">
+                            <sm-input id="convert_btc_input" placeholder="BTC Address" data-btc-address
+                                error-text="Invalid BTC address" animate required></sm-input>
+                            <button id="convert_to_flo" class="button--primary justify-self-center">
+                                <!-- <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24"
+                                    width="24px" fill="#000000">
+                                    <path d="M0 0h24v24H0V0z" fill="none" />
+                                    <path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z" />
+                                </svg> -->
+                                Get FLO
+                            </button>
+                        </div>
+                        <div class="flex">
+                            <sm-input id="convert_flo_input" placeholder="FLO Address" animate></sm-input>
+                            <button id="convert_to_btc" class="button--primary justify-self-center">
+                                <!-- <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24"
+                                    width="24px" fill="#000000">
+                                    <path d="M0 0h24v24H0V0z" fill="none" />
+                                    <path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z" />
+                                </svg> -->
+                                Get BTC
+                            </button>
                         </div>
                     </div>
                 </section>
@@ -1381,19 +1391,30 @@
             getRef('btc_private').value = btc_wif;
             getRef('priv_key_bech32').value = btc_api.bech32Address(btc_wif);
         }
-        getRef('convert_flo_btc').onclick = evt => {
-            const flo_addr = getRef('convert_flo_input').value.trim();
+        getRef('convert_to_flo').onclick = evt => {
             const btc_bech = getRef('convert_btc_input').value.trim();
-            if (btc_bech === '' && flo_addr === '') {
-                notify('Please enter either FLO or BTC address', 'error');
-                return;
+            if (btc_bech === '') {
+                getRef('convert_btc_input').focusIn()
+                return notify('Please enter BTC address', 'error');
             }
-            console.log(flo_addr, btc_bech)
-            if (flo_addr !== '') {
-                getRef('convert_btc_input').value = btc_api.convert.legacy2bech(flo_addr);
-            } else {
+            const type = coinjs.addressDecode(btc_bech).type
+            const isLegacy = /\w{34,35}$/.test(btc_bech)
+            if (type === 'standard') {
+                getRef('convert_flo_input').value = btc_api.convert.legacy2legacy(btc_bech, 0x23);
+            } else if (type === 'bech32') {
                 getRef('convert_flo_input').value = btc_api.convert.bech2legacy(btc_bech, 0x23);
+            } else {
+                getRef('convert_flo_input').value = '';
+                notify(`Multisig address can't be converted to FLO`, 'error');
             }
+        }
+        getRef('convert_to_btc').onclick = evt => {
+            const flo_addr = getRef('convert_flo_input').value.trim();
+            if (flo_addr === '') {
+                getRef('convert_flo_input').focusIn();
+                return notify('Please enter FLO address', 'error');
+            }
+            getRef('convert_btc_input').value = btc_api.convert.legacy2bech(flo_addr);
         }
         const txParticipantsObserver = new MutationObserver(mutations => {
             mutations.forEach(mutation => {
