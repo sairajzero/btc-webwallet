@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html lang="en">
 
 <head>
     <title>Bitcoin Web Wallet</title>
@@ -26,9 +26,9 @@
     <sm-popup id="confirmation_popup">
         <h4 id="confirm_title"></h4>
         <p id="confirm_message"></p>
-        <div class="flex align-center">
-            <sm-button variant="no-outline" class="cancel-btn">Cancel</sm-button>
-            <sm-button variant="no-outline" class="submit-btn">OK</sm-button>
+        <div class="flex align-center gap-0-3">
+            <button class="cancel-btn margin-left-auto">Cancel</button>
+            <button class="button button--primary submit-btn">OK</button>
         </div>
     </sm-popup>
     <div id="main_card">
@@ -39,7 +39,7 @@
                 <h4>Bitcoin Web Wallet</h4>
             </div>
             <div class="flex align-center gap-0-3">
-                <sm-select id="currency_selector" class="margin-right-0-5" align-select="right">
+                <sm-select id="currency_selector" class="margin-right-0-5">
                     <sm-option value="btc">BTC</sm-option>
                     <sm-option value="inr">INR</sm-option>
                     <sm-option value="usd">USD</sm-option>
@@ -714,8 +714,8 @@
                 notify('copied', 'success')
             })
             document.addEventListener("pointerdown", (e) => {
-                if (e.target.closest("button, sm-button:not([disabled]), .interactive")) {
-                    createRipple(e, e.target.closest("button, sm-button, .interactive"));
+                if (e.target.closest("button, .interactive")) {
+                    createRipple(e, e.target.closest("button, .interactive"));
                 }
             });
             showPage(window.location.hash)

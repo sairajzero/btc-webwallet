@@ -485,6 +485,9 @@ ol {
 .margin-left-0-5 {
   margin-left: 0.5rem;
 }
+.margin-left-auto {
+  margin-left: auto;
+}
 .margin-top-1-5 {
   margin-top: 1.5rem;
 }
@@ -589,7 +592,7 @@ ol {
   }
 }
 #main_header {
-  padding: 1.5rem;
+  padding: 1.5rem max(1rem, 4vw);
 }
 #main_card {
   display: grid;
