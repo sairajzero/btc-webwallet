@@ -178,12 +178,12 @@
                 <section class="margin-bottom-2 grid gap-1">
                     <div class="grid gap-0-3">
                         <h4>Private key converter</h4>
-                        <p>Convert private key of any blockchain to corresponding BTC address & private key.</p>
+                        <p>Convert private key of FLO blockchain to corresponding BTC address & private key.</p>
                     </div>
                     <div class="grid gap-1-5">
                         <sm-form class="flex align-center">
-                            <sm-input type="password" id="any_private" class="password-field" placeholder="Private key"
-                                required animate>
+                            <sm-input type="password" id="any_private" class="password-field"
+                                placeholder="FLO private key" required animate>
                                 <label slot="right" class="interact">
                                     <input type="checkbox" class="hidden" autocomplete="off" readonly
                                         onchange="togglePrivateKeyVisibility(this)">
@@ -242,22 +242,12 @@
                             <sm-input id="convert_btc_input" placeholder="BTC Address" data-btc-address
                                 error-text="Invalid BTC address" animate required></sm-input>
                             <button id="convert_to_flo" class="button--primary justify-self-center">
-                                <!-- <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24"
-                                    width="24px" fill="#000000">
-                                    <path d="M0 0h24v24H0V0z" fill="none" />
-                                    <path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z" />
-                                </svg> -->
                                 Get FLO
                             </button>
                         </div>
                         <div class="flex">
                             <sm-input id="convert_flo_input" placeholder="FLO Address" animate></sm-input>
                             <button id="convert_to_btc" class="button--primary justify-self-center">
-                                <!-- <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24"
-                                    width="24px" fill="#000000">
-                                    <path d="M0 0h24v24H0V0z" fill="none" />
-                                    <path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z" />
-                                </svg> -->
                                 Get BTC
                             </button>
                         </div>
