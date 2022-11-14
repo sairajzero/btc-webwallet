@@ -207,7 +207,7 @@
                         </sm-form>
                         <div class="grid gap-0-5">
                             <sm-input type="password" id="btc_private" class="password-field"
-                                placeholder="BTC Private key" animate>
+                                placeholder="BTC private key" animate>
                                 <label slot="right" class="interact">
                                     <input type="checkbox" class="hidden" autocomplete="off" readonly
                                         onchange="togglePrivateKeyVisibility(this)">
@@ -227,7 +227,7 @@
                                     </svg>
                                 </label>
                             </sm-input>
-                            <sm-input id="priv_key_bech32" placeholder="Address" data-btc-address
+                            <sm-input id="priv_key_bech32" placeholder="BTC address" data-btc-address
                                 error-text="Invalid BTC address" animate required></sm-input>
                         </div>
                     </div>
@@ -239,16 +239,20 @@
                     </div>
                     <div class="grid gap-0-5">
                         <div class="flex">
-                            <sm-input id="convert_btc_input" placeholder="BTC Address" data-btc-address
+                            <sm-input id="convert_btc_input" placeholder="BTC Address"
+                                style="--border-radius: 0.3rem 0 0 0.3rem;" data-btc-address
                                 error-text="Invalid BTC address" animate required></sm-input>
-                            <button id="convert_to_flo" class="button--primary justify-self-center">
-                                Get FLO
+                            <button id="convert_to_flo" class="button--primary justify-self-center"
+                                style="border-radius: 0 0.3rem 0.3rem 0">
+                                Convert to FLO
                             </button>
                         </div>
                         <div class="flex">
-                            <sm-input id="convert_flo_input" placeholder="FLO Address" animate></sm-input>
-                            <button id="convert_to_btc" class="button--primary justify-self-center">
-                                Get BTC
+                            <sm-input id="convert_flo_input" placeholder="FLO Address"
+                                style="--border-radius: 0.3rem 0 0 0.3rem;" animate></sm-input>
+                            <button id="convert_to_btc" class="button--primary justify-self-center"
+                                style="border-radius: 0 0.3rem 0.3rem 0">
+                                Convert to BTC
                             </button>
                         </div>
                     </div>

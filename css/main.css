@@ -112,6 +112,7 @@ button {
   padding: 0.8rem;
   border-radius: 0.3rem;
   justify-content: center;
+  flex-shrink: 0;
 }
 button:focus-visible {
   outline: var(--accent-color) solid medium;
