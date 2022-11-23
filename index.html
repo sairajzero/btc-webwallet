@@ -14,11 +14,8 @@
         rel="stylesheet">
     <script src="components.js" defer></script>
     <script src="https://unpkg.com/uhtml@3.0.1/es.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
-        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-    </script>
     <script type="text/javascript" src="lib.js"></script>
-    <script type="text/javascript" src="lib_btc.js"></script>
+    <script type="text/javascript" src="btcOperator.js"></script>
 </head>
 
 <body class="hidden">
@@ -698,7 +695,7 @@
                 notify('Browser is not fully compatible, some features may not work. for best experience please use Chrome, Edge, Firefox or Safari', 'error')
             }
             document.body.classList.remove('hidden')
-            document.querySelectorAll('sm-input[data-btc-address]').forEach(input => input.customValidation = btc_api.validateAddress)
+            document.querySelectorAll('sm-input[data-btc-address]').forEach(input => input.customValidation = btcOperator.validateAddress)
             document.addEventListener('keyup', (e) => {
                 if (e.key === 'Escape') {
                     closePopup()
@@ -1352,7 +1349,7 @@
             render.transactions(address)
         })
         getRef('gen_new_addr_btn').addEventListener('click', () => {
-            const { wif, address, segwitAddress, bech32Address } = btc_api.newKeys;
+            const { wif, address, segwitAddress, bech32Address } = btcOperator.newKeys;
             renderElem(getRef('generated_btc_addr'), html`
                 <div>
                     <h5>BTC Address</h5>
@@ -1367,10 +1364,10 @@
         });
         function retrieveBtcAddr() {
             let wif = getRef('retrieve_btc_addr_field').value.trim();
-            // addressForm['legacy'].value = btc_api.address(wif);
-            // addressForm['segwit'].value = btc_api.segwitAddress(wif);
+            // addressForm['legacy'].value = btcOperator.address(wif);
+            // addressForm['segwit'].value = btcOperator.segwitAddress(wif);
             getRef('recovered_btc_addr_wrapper').classList.remove('hidden')
-            getRef('recovered_btc_addr').value = btc_api.bech32Address(wif);
+            getRef('recovered_btc_addr').value = btcOperator.bech32Address(wif);
         }
 
         function togglePrivateKeyVisibility(input) {
@@ -1381,9 +1378,9 @@
 
         getRef('convert_priv_key').onclick = evt => {
             let source_wif = getRef('any_private').value.trim();
-            let btc_wif = btc_api.convert.wif(source_wif);
+            let btc_wif = btcOperator.convert.wif(source_wif);
             getRef('btc_private').value = btc_wif;
-            getRef('priv_key_bech32').value = btc_api.bech32Address(btc_wif);
+            getRef('priv_key_bech32').value = btcOperator.bech32Address(btc_wif);
         }
         getRef('convert_to_flo').onclick = evt => {
             const btc_bech = getRef('convert_btc_input').value.trim();
@@ -1394,9 +1391,9 @@
             const type = coinjs.addressDecode(btc_bech).type
             const isLegacy = /\w{34,35}$/.test(btc_bech)
             if (type === 'standard') {
-                getRef('convert_flo_input').value = btc_api.convert.legacy2legacy(btc_bech, 0x23);
+                getRef('convert_flo_input').value = btcOperator.convert.legacy2legacy(btc_bech, 0x23);
             } else if (type === 'bech32') {
-                getRef('convert_flo_input').value = btc_api.convert.bech2legacy(btc_bech, 0x23);
+                getRef('convert_flo_input').value = btcOperator.convert.bech2legacy(btc_bech, 0x23);
             } else {
                 getRef('convert_flo_input').value = '';
                 notify(`Multisig address can't be converted to FLO`, 'error');
@@ -1408,7 +1405,7 @@
                 getRef('convert_flo_input').focusIn();
                 return notify('Please enter FLO address', 'error');
             }
-            getRef('convert_btc_input').value = btc_api.convert.legacy2bech(flo_addr);
+            getRef('convert_btc_input').value = btcOperator.convert.legacy2bech(flo_addr);
         }
         const txParticipantsObserver = new MutationObserver(mutations => {
             mutations.forEach(mutation => {
@@ -1448,7 +1445,7 @@
                 senderCard.querySelector('.remove-card').remove()
             }
             getRef('sender_container').appendChild(senderCard);
-            getRef('sender_container').querySelectorAll('sm-input[data-btc-address]').forEach(input => input.customValidation = btc_api.validateAddress)
+            getRef('sender_container').querySelectorAll('sm-input[data-btc-address]').forEach(input => input.customValidation = btcOperator.validateAddress)
         }
         getRef('send_tx').addEventListener('click', e => {
             if (e.target.closest('.remove-card')) {
@@ -1468,7 +1465,7 @@
             try {
                 senderBalances.forEach(el => el.innerHTML = '<sm-spinner></sm-spinner>');
                 await getExchangeRate();
-                const balances = await Promise.all(addresses.map((addr, index) => btc_api.getBalance(addr)))
+                const balances = await Promise.all(addresses.map((addr, index) => btcOperator.getBalance(addr)))
                 balances.forEach((result, index) => {
                     senderBalances[index].textContent = formatAmount(getConvertedAmount(result));
                     senderBalances[index].dataset.btcAmount = result;
@@ -1487,7 +1484,7 @@
             }
             receiverCard.querySelector('.currency-symbol') ? receiverCard.querySelector('.currency-symbol').innerHTML = currencyIcons[getRef('currency_selector').value] : null;
             getRef('receiver_container').appendChild(receiverCard);
-            getRef('receiver_container').querySelectorAll('sm-input[data-btc-address]').forEach(input => input.customValidation = btc_api.validateAddress)
+            getRef('receiver_container').querySelectorAll('sm-input[data-btc-address]').forEach(input => input.customValidation = btcOperator.validateAddress)
         }
 
         getRef('fees_selector').addEventListener('change', e => {
@@ -1518,8 +1515,8 @@
                     return parseFloat(input.value.trim()) / globalExchangeRate[getRef('currency_selector').value]
                 });
                 const fee = parseFloat((parseFloat(getRef('send_fee').value.trim()) / globalExchangeRate[getRef('currency_selector').value]).toFixed(8));
-                console.debug(senders, receivers, amounts, fee);
-                btc_api.sendTx(senders, privKeys, receivers, amounts, fee).then(result => {
+                console.debug(senders, receivers, amounts, fee); //for automatic fee calc, set fee = null
+                btcOperator.sendTx(senders, privKeys, receivers, amounts, fee).then(result => {
                     console.log(result);
                     getRef('txid').value = result.txid;
                     openPopup('txid_popup');
@@ -1547,7 +1544,7 @@
         }
         //  detect if given string is a bitcoin address or transaction id
         function checkQueryStringType(str) {
-            if (btc_api.validateAddress(str)) {
+            if (btcOperator.validateAddress(str)) {
                 return 'address';
             } else if (isTxId(str)) {
                 return 'txid';
@@ -1566,7 +1563,7 @@
 
         function getAddressDetails(address) {
             return new Promise((resolve, reject) => {
-                btc_api.getAddressData(address).then(data => {
+                btcOperator.getAddressData(address).then(data => {
                     console.debug(data);
                     let details = {};
                     details.balance = data.balance;
