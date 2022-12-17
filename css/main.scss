@@ -222,16 +222,20 @@ sm-select {
 sm-option {
   font-size: 0.9rem;
 }
-strip-select {
+sm-chips {
   --gap: 0;
   background-color: rgba(var(--text-color), 0.06);
   border-radius: 0.3rem;
   padding: 0.3rem;
 }
-strip-option {
+sm-chip {
   font-size: 0.9rem;
   --border-radius: 0.2rem;
   user-select: none;
+  &[selected] {
+    color: rgba(var(--background-color), 1);
+    --background: var(--accent-color);
+  }
 }
 ul,
 ol {

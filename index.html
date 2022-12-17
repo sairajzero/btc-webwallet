@@ -104,11 +104,11 @@
                         <div class="flex align-center space-between margin-bottom-1 sticky top-0"
                             style="background-color: rgba(var(--foreground-color), 1);">
                             <h5>Transactions</h5>
-                            <strip-select id="filter_selector">
-                                <strip-option value="all" selected>All</strip-option>
-                                <strip-option value="sent">Sent</strip-option>
-                                <strip-option value="received">Received</strip-option>
-                            </strip-select>
+                            <sm-chips id="filter_selector">
+                                <sm-chip value="all" selected>All</sm-chip>
+                                <sm-chip value="sent">Sent</sm-chip>
+                                <sm-chip value="received">Received</sm-chip>
+                            </sm-chips>
                         </div>
                         <ul id="transactions_list" class="observe-empty-state"></ul>
                         <div class="empty-state align-self-center text-center">Balance and transactions will appear here
@@ -153,17 +153,15 @@
                     <div class="grid gap-0-5">
                         <div class="flex align-center space-between">
                             <h4>Fees</h4>
-                            <strip-select id="fees_selector">
-                                <strip-option value="suggested" selected>Suggested</strip-option>
-                                <!-- <strip-option value="optimum">Optimum</strip-option> -->
-                                <strip-option value="custom">Custom</strip-option>
-                            </strip-select>
+                            <sm-chips id="fees_selector">
+                                <sm-chip value="suggested" selected>Suggested</sm-chip>
+                                <sm-chip value="custom">Custom</sm-chip>
+                            </sm-chips>
                         </div>
-                        <p id="selected_fee_tip">Estimated time of confirmation is 1hr</p>
-                        <sm-input type="number" id="send_fee" placeholder="Fee" min="0.00000001" step="0.00000001"
-                            error-text="Please enter valid fees" readonly animate required>
-                            <div class="currency-symbol flex" slot="icon"></div>
-                        </sm-input>
+                        <div id="fees_wrapper" class="grid gap-0-5 align-center">
+                            <h4 id="recommended_fee"></h4>
+                            <p>Fees will be calculated when above form is properly filled</p>
+                        </div>
                     </div>
                     <div class="multi-state-button margin-bottom-1-5">
                         <button id="send_transaction" type="submit" class="button button--primary cta w-100"
@@ -794,9 +792,7 @@
                     }
                     break;
                 case 'send':
-                    getExchangeRate().then(() => {
-                        calculateFee()
-                    }).catch(e => {
+                    getExchangeRate().catch(e => {
                         console.error(e)
                     })
                     break;
@@ -1127,14 +1123,8 @@
                         <div class="transaction__receiver">${transactionReceiver}</div>
                         <div class="transaction__id wrap-around">TXID: <a href="${`#/check_details?query=${txid}`}">${txid}</a></div>
                         ${!block ? html`<p class="pending-badge">Confirmation pending: amount will be deducted after transaction is confirmed</p>` : ''}
-                        </li>
-                        `;
-                // ${!block ? html`
-                //     <p class="flex align-center unconfirmed-wrapper">
-                //         <span class="margin-right-0-5">Confirmation taking too long? </span>
-                //         <button class="button button--small">Increase fees</button>
-                //     </p>
-                //     `: ''}
+                    </li>
+                    `;
             },
             async transactions(address) {
                 try {
@@ -1323,17 +1313,6 @@
             const result = parseFloat((amount * globalExchangeRate[getRef('currency_selector').value]).toFixed(8))
             return result
         }
-        function calculateFee() {
-            fetch('https://bitcoiner.live/api/fees/estimates/latest').then(res => res.json()).then(data => {
-                const satPerByte = data.estimates['60'].sat_per_vbyte;
-                const legacyBytes = 200;
-                const segwitBytes = 77;
-                const fees = (legacyBytes * satPerByte + (0.25 * satPerByte) * segwitBytes) / Math.pow(10, 8);
-                getRef('send_fee').value = getConvertedAmount(fees);
-            }).catch(e => {
-                console.error(e)
-            })
-        }
         getRef('currency_selector').addEventListener('change', async e => {
             if (!globalExchangeRate.hasOwnProperty(e.target.value))
                 await getExchangeRate();
@@ -1342,7 +1321,6 @@
             document.querySelectorAll('.amount-shown').forEach(el => {
                 el.textContent = formatAmount(getConvertedAmount(el.dataset.btcAmount))
             })
-            calculateFee();
         })
         getRef('filter_selector').addEventListener('change', async e => {
             const address = getRef('search_query_input').value;
@@ -1389,7 +1367,6 @@
                 return notify('Please enter BTC address', 'error');
             }
             const type = coinjs.addressDecode(btc_bech).type
-            const isLegacy = /\w{34,35}$/.test(btc_bech)
             if (type === 'standard') {
                 getRef('convert_flo_input').value = btcOperator.convert.legacy2legacy(btc_bech, 0x23);
             } else if (type === 'bech32') {
@@ -1488,44 +1465,81 @@
         }
 
         getRef('fees_selector').addEventListener('change', e => {
-            if (e.target.value !== 'custom') {
-                getRef('send_fee').readOnly = true;
-            }
             switch (e.target.value) {
                 case 'custom':
-                    getRef('send_fee').readOnly = false;
-                    getRef('send_fee').focusIn();
-                    getRef('selected_fee_tip').textContent = 'Set custom fee';
+                    renderElem(getRef('fees_wrapper'), html`
+                        <p id="selected_fee_tip">Set custom fee</p>
+                        <sm-input type="number" id="send_fee" placeholder="Fee" min="0.00000001" step="0.00000001"
+                            error-text="Please enter valid fees" animate required>
+                            <div class="currency-symbol flex" slot="icon"></div>
+                        </sm-input>
+                    `)
+                    document.getElementById('send_fee').focusIn();
+                    getRef('fees_wrapper').querySelector('.currency-symbol').innerHTML = currencyIcons[getRef('currency_selector').value];
                     break;
                 case 'suggested':
-                    getRef('selected_fee_tip').textContent = 'Estimated time of confirmation is 1hr'
-                    calculateFee();
+                    if (getRef('send_transaction').disabled) {
+                        renderElem(getRef('fees_wrapper'), html`
+                            <h4 id="recommended_fee"></h4>
+                            <p>Fees will be calculated when above form is properly filled</p>
+                         `)
+                    } else {
+                        renderElem(getRef('fees_wrapper'), html`
+                            <h4 id="recommended_fee"></h4>
+                         `)
+                    }
                     break;
             }
+        })
+
+        function getTransactionInputs() {
+            const senders = [...new Set([...getRef('sender_container').querySelectorAll('.sender-input')].map(input => input.value.trim()))];
+            const privKeys = [...getRef('sender_container').querySelectorAll('.priv-key-input')].map(input => input.value.trim());
+            const receivers = [...getRef('receiver_container').querySelectorAll('.receiver-input')].map(input => input.value.trim());
+            const amounts = [...getRef('receiver_container').querySelectorAll('.amount-input')].map(input => {
+                return parseFloat(input.value.trim()) / globalExchangeRate[getRef('currency_selector').value]
+            });
+            console.debug(senders, receivers, amounts); //for automatic fee calc, set fee = null
+            return [senders, privKeys, receivers, amounts]
+        }
+        function calculateFees() {
+            return new Promise((resolve, reject) => {
+                const [senders, privKeys, receivers, amounts] = getTransactionInputs();
+                btcOperator.createSignedTx(senders, privKeys, receivers, amounts).then(fees => {
+                    document.getElementById('recommended_fee').textContent = formatAmount(getConvertedAmount(fees));
+                    resolve(fees)
+                }).catch(e => {
+                    notify(e, 'error')
+                    reject(e)
+                })
+            })
+        }
+
+        getRef('send_tx').addEventListener('valid', e => {
+            if (getRef('fees_selector').value === 'suggested') {
+                calculateFees()
+            } else {
+
+            }
+        })
+        getRef('send_tx').addEventListener('invalid', e => {
+            console.debug(e)
         })
 
 
         getRef('send_transaction').onclick = evt => {
             buttonLoader('send_transaction', true)
-            getExchangeRate().then(exchangeRate => {
-                const senders = [...new Set([...getRef('sender_container').querySelectorAll('.sender-input')].map(input => input.value.trim()))];
-                const privKeys = [...getRef('sender_container').querySelectorAll('.priv-key-input')].map(input => input.value.trim());
-                const receivers = [...getRef('receiver_container').querySelectorAll('.receiver-input')].map(input => input.value.trim());
-                const amounts = [...getRef('receiver_container').querySelectorAll('.amount-input')].map(input => {
-                    return parseFloat(input.value.trim()) / globalExchangeRate[getRef('currency_selector').value]
-                });
-                const fee = parseFloat((parseFloat(getRef('send_fee').value.trim()) / globalExchangeRate[getRef('currency_selector').value]).toFixed(8));
-                console.debug(senders, receivers, amounts, fee); //for automatic fee calc, set fee = null
+            getExchangeRate().then(async exchangeRate => {
+                const [senders, privKeys, receivers, amounts] = getTransactionInputs();
+                let fee = null;
+                if (getRef('fees_selector').value === 'custom') {
+                    fee = parseFloat((parseFloat(getRef('send_fee').value.trim()) / globalExchangeRate[getRef('currency_selector').value]).toFixed(8));
+                }
                 btcOperator.sendTx(senders, privKeys, receivers, amounts, fee).then(result => {
                     console.log(result);
                     getRef('txid').value = result.txid;
                     openPopup('txid_popup');
                     getRef('send_tx').reset()
-                    getExchangeRate().then(() => {
-                        calculateFee()
-                    }).catch(e => {
-                        console.error(e)
-                    })
                 }).catch(error => {
                     console.error(error)
                     notify(`Error sending transaction \n ${error}`, 'error');
