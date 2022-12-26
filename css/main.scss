@@ -905,6 +905,15 @@ table {
     margin-right: 1rem;
   }
 }
+#selected_fee_tip {
+  font-weight: 500;
+  &.error {
+    color: var(--danger-color);
+    .icon {
+      fill: var(--danger-color);
+    }
+  }
+}
 .fab {
   position: absolute;
   right: 0;

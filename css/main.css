@@ -964,6 +964,16 @@ table tr:nth-child(even) {
   margin-right: 1rem;
 }
 
+#selected_fee_tip {
+  font-weight: 500;
+}
+#selected_fee_tip.error {
+  color: var(--danger-color);
+}
+#selected_fee_tip.error .icon {
+  fill: var(--danger-color);
+}
+
 .fab {
   position: absolute;
   right: 0;

@@ -118,7 +118,7 @@
                 </section>
             </div>
             <div id="send" class="page hidden">
-                <sm-form id="send_tx">
+                <sm-form id="send_tx" skip-submit>
                     <div class="margin-bottom-0-5">
                         <div class="flex align-center space-between margin-bottom-0-5">
                             <h3>Senders</h3>
@@ -150,7 +150,7 @@
                             </svg>
                             Add receiver</button>
                     </div>
-                    <div class="grid gap-0-5">
+                    <div id="fees_section" class="grid gap-0-5">
                         <div class="flex align-center space-between">
                             <h4>Fees</h4>
                             <sm-chips id="fees_selector">
@@ -163,6 +163,7 @@
                             <p>Fees will be calculated when above form is properly filled</p>
                         </div>
                     </div>
+                    <div id="error_section"></div>
                     <div class="multi-state-button margin-bottom-1-5">
                         <button id="send_transaction" type="submit" class="button button--primary cta w-100"
                             disabled>Send</button>
@@ -1476,6 +1477,8 @@
                     `)
                     document.getElementById('send_fee').focusIn();
                     getRef('fees_wrapper').querySelector('.currency-symbol').innerHTML = currencyIcons[getRef('currency_selector').value];
+                    getRef('fees_section').classList.remove('hidden')
+                    renderElem(getRef('error_section'), html``)
                     break;
                 case 'suggested':
                     if (getRef('send_transaction').disabled) {
@@ -1488,9 +1491,42 @@
                             <h4 id="recommended_fee"></h4>
                          `)
                     }
+                    getRef('fees_section').classList.remove('hidden')
+                    renderElem(getRef('error_section'), html``)
                     break;
             }
         })
+        function renderFeesUI(type = getRef('fees_selector').value, error) {
+            switch (type) {
+                case 'custom':
+                    renderElem(getRef('fees_wrapper'), html`
+                        <p id="selected_fee_tip">Set custom fee</p>
+                        <sm-input type="number" id="send_fee" placeholder="Fee" min="0.00000001" step="0.00000001"
+                            error-text="Please enter valid fees" animate required>
+                            <div class="currency-symbol flex" slot="icon"></div>
+                        </sm-input>
+                    `)
+                    document.getElementById('send_fee').focusIn();
+                    getRef('fees_wrapper').querySelector('.currency-symbol').innerHTML = currencyIcons[getRef('currency_selector').value];
+                    getRef('fees_section').classList.remove('hidden')
+                    renderElem(getRef('error_section'), html``)
+                    break;
+                case 'suggested':
+                    if (getRef('send_transaction').disabled) {
+                        renderElem(getRef('fees_wrapper'), html`
+                            <h4 id="recommended_fee"></h4>
+                            <p>Fees will be calculated when above form is properly filled</p>
+                         `)
+                    } else {
+                        renderElem(getRef('fees_wrapper'), html`
+                            <h4 id="recommended_fee"></h4>
+                         `)
+                    }
+                    getRef('fees_section').classList.remove('hidden')
+                    renderElem(getRef('error_section'), html``)
+                    break;
+            }
+        }
 
         function getTransactionInputs() {
             const senders = [...new Set([...getRef('sender_container').querySelectorAll('.sender-input')].map(input => input.value.trim()))];
@@ -1507,23 +1543,35 @@
                 const [senders, privKeys, receivers, amounts] = getTransactionInputs();
                 btcOperator.createSignedTx(senders, privKeys, receivers, amounts).then(fees => {
                     document.getElementById('recommended_fee').textContent = formatAmount(getConvertedAmount(fees));
+                    getRef('send_transaction').disabled = false;
+                    getRef('fees_section').classList.remove('hidden')
+                    getRef('error_section').classList.add('hidden')
                     resolve(fees)
                 }).catch(e => {
-                    notify(e, 'error')
+                    getRef('send_transaction').disabled = true;
+                    getRef('fees_section').classList.add('hidden')
+                    getRef('error_section').classList.remove('hidden')
+                    renderElem(getRef('error_section'), html`
+                        <p id="selected_fee_tip" class="error flex align-center gap-0-5">
+                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M11 15h2v2h-2v-2zm0-8h2v6h-2V7zm.99-5C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/></svg>
+                            ${e}
+                        </p>
+                     `)
                     reject(e)
                 })
             })
         }
 
-        getRef('send_tx').addEventListener('valid', e => {
+        getRef('send_tx').addEventListener('valid', debounce(e => {
             if (getRef('fees_selector').value === 'suggested') {
                 calculateFees()
             } else {
 
             }
-        })
+        }, 300))
         getRef('send_tx').addEventListener('invalid', e => {
-            console.debug(e)
+            getRef('fees_section').classList.remove('hidden')
+            getRef('error_section').classList.add('hidden')
         })
 
 
