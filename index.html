@@ -1502,7 +1502,7 @@
                 case 'custom':
                     renderElem(getRef('fees_wrapper'), html`
                         <p id="selected_fee_tip">Set custom fee</p>
-                        <sm-input type="number" id="send_fee" class="amount-shown" placeholder="Fee" min="0.00000001" step="0.00000001"
+                        <sm-input type="number" id="send_fee" class="amount-shown" placeholder="Fee" min="0.000001" step="0.00000001"
                             error-text="Please enter valid fees" animate required>
                             <div class="currency-symbol flex" slot="icon"></div>
                         </sm-input>
@@ -1513,9 +1513,7 @@
                     renderElem(getRef('error_section'), html``)
                     break;
                 case 'suggested':
-                    renderElem(getRef('fees_wrapper'), html`
-                            <b id="recommended_fee"></b>
-                         `)
+                    renderElem(getRef('fees_wrapper'), html` <b id="recommended_fee"></b> `)
                     getRef('fees_section').classList.remove('hidden')
                     renderElem(getRef('error_section'), html``)
                     break;
@@ -1534,10 +1532,9 @@
         }
         function calculateFees() {
             return new Promise((resolve, reject) => {
+                document.getElementById('recommended_fee').innerHTML = '<sm-spinner></sm-spinner>';
                 const [senders, privKeys, receivers, amounts] = getTransactionInputs();
-                // renderFeesUI();
                 btcOperator.createSignedTx(senders, privKeys, receivers, amounts).then(({ fee }) => {
-                    console.debug('the calculated fees is', fee);
                     document.getElementById('recommended_fee').textContent = formatAmount(getConvertedAmount(fee));
                     getRef('send_transaction').disabled = false;
                     getRef('fees_section').classList.remove('hidden')
@@ -1562,12 +1559,16 @@
             if (getRef('fees_selector').value === 'suggested') {
                 calculateFees()
             } else {
-
+                getRef('fees_section').classList.remove('hidden')
+                getRef('error_section').classList.add('hidden')
+                if (getRef('send_tx').validity)
+                    getRef('send_transaction').disabled = false;
             }
         }, 300))
         getRef('send_tx').addEventListener('invalid', e => {
             getRef('fees_section').classList.remove('hidden')
             getRef('error_section').classList.add('hidden')
+            getRef('send_transaction').disabled = true;
         })
 
 
@@ -1577,7 +1578,13 @@
                 const [senders, privKeys, receivers, amounts] = getTransactionInputs();
                 let fee = null;
                 if (getRef('fees_selector').value === 'custom') {
-                    fee = parseFloat((parseFloat(getRef('send_fee').value.trim()) / globalExchangeRate[getRef('currency_selector').value]).toFixed(8));
+                    const feeInput = document.getElementById('send_fee').value.trim();
+                    if (!feeInput || isNaN(feeInput) || feeInput <= 0) {
+                        notify('Please enter a valid fee', 'error');
+                        buttonLoader('send_transaction', false)
+                        return;
+                    }
+                    fee = parseFloat((parseFloat(feeInput) / globalExchangeRate[getRef('currency_selector').value]).toFixed(8));
                 }
                 btcOperator.sendTx(senders, privKeys, receivers, amounts, fee).then(txid => {
                     console.log(txid);
