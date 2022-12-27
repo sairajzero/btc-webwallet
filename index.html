@@ -1586,7 +1586,7 @@
                 }
                 btcOperator.sendTx(senders, privKeys, receivers, amounts, fee).then(result => {
                     console.log(result);
-                    getRef('txid').value = result.txid;
+                    getRef('txid').value = txid;
                     openPopup('txid_popup');
                     getRef('send_tx').reset()
                 }).catch(error => {
