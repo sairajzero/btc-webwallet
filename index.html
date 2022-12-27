@@ -1584,8 +1584,8 @@
                 if (getRef('fees_selector').value === 'custom') {
                     fee = parseFloat((parseFloat(getRef('send_fee').value.trim()) / globalExchangeRate[getRef('currency_selector').value]).toFixed(8));
                 }
-                btcOperator.sendTx(senders, privKeys, receivers, amounts, fee).then(result => {
-                    console.log(result);
+                btcOperator.sendTx(senders, privKeys, receivers, amounts, fee).then(txid => {
+                    console.log(txid);
                     getRef('txid').value = txid;
                     openPopup('txid_popup');
                     getRef('send_tx').reset()
