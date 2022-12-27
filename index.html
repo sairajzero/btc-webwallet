@@ -1541,13 +1541,13 @@
             return new Promise((resolve, reject) => {
                 const [senders, privKeys, receivers, amounts] = getTransactionInputs();
                 // renderFeesUI();
-                btcOperator.createSignedTx(senders, privKeys, receivers, amounts).then(fees => {
-                    console.debug(fees);
-                    document.getElementById('recommended_fee').textContent = formatAmount(getConvertedAmount(fees));
+                btcOperator.createSignedTx(senders, privKeys, receivers, amounts).then(({ fee }) => {
+                    console.debug('the calculated fees is', fee);
+                    document.getElementById('recommended_fee').textContent = formatAmount(getConvertedAmount(fee));
                     getRef('send_transaction').disabled = false;
                     getRef('fees_section').classList.remove('hidden')
                     getRef('error_section').classList.add('hidden')
-                    resolve(fees)
+                    resolve(fee)
                 }).catch(e => {
                     getRef('send_transaction').disabled = true;
                     getRef('fees_section').classList.add('hidden')
