@@ -159,8 +159,7 @@
                             </sm-chips>
                         </div>
                         <div id="fees_wrapper" class="grid gap-0-5 align-center">
-                            <h4 id="recommended_fee"></h4>
-                            <p>Fees will be calculated when above form is properly filled</p>
+                            <b id="recommended_fee"></b>
                         </div>
                     </div>
                     <div id="error_section"></div>
@@ -1459,7 +1458,10 @@
                 e.target.closest('.card').remove()
             }
         })
-        getRef('check_balance').onclick = async evt => {
+        getRef('check_balance').onclick = evt => {
+            checkBalance();
+        }
+        async function checkBalance() {
             const addresses = [...getRef('sender_container').querySelectorAll('.sender-input')].filter(input => input.value.trim() !== '').map(input => input.value.trim())
             if (addresses.length === 0) {
                 notify('Please add at least one sender address', 'error')
@@ -1511,16 +1513,9 @@
                     renderElem(getRef('error_section'), html``)
                     break;
                 case 'suggested':
-                    if (getRef('send_transaction').disabled) {
-                        renderElem(getRef('fees_wrapper'), html`
-                            <h4 id="recommended_fee"></h4>
-                            <p>Fees will be calculated when above form is properly filled</p>
+                    renderElem(getRef('fees_wrapper'), html`
+                            <b id="recommended_fee"></b>
                          `)
-                    } else {
-                        renderElem(getRef('fees_wrapper'), html`
-                            <h4 id="recommended_fee"></h4>
-                         `)
-                    }
                     getRef('fees_section').classList.remove('hidden')
                     renderElem(getRef('error_section'), html``)
                     break;
@@ -1587,7 +1582,7 @@
                 btcOperator.sendTx(senders, privKeys, receivers, amounts, fee).then(txid => {
                     console.log(txid);
                     getRef('txid').value = txid;
-                    openPopup('txid_popup');
+                    openPopup('txid_popup', true);
                     getRef('send_tx').reset()
                 }).catch(error => {
                     console.error(error)
