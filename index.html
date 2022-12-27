@@ -1494,8 +1494,9 @@
             getRef('receiver_container').querySelectorAll('sm-input[data-btc-address]').forEach(input => input.customValidation = btcOperator.validateAddress)
         }
 
-        getRef('fees_selector').addEventListener('change', e => {
-            switch (e.target.value) {
+        getRef('fees_selector').addEventListener('change', renderFeesUI)
+        function renderFeesUI() {
+            switch (getRef('fees_selector').value) {
                 case 'custom':
                     renderElem(getRef('fees_wrapper'), html`
                         <p id="selected_fee_tip">Set custom fee</p>
@@ -1524,7 +1525,7 @@
                     renderElem(getRef('error_section'), html``)
                     break;
             }
-        })
+        }
 
         function getTransactionInputs() {
             const senders = [...new Set([...getRef('sender_container').querySelectorAll('.sender-input')].map(input => input.value.trim()))];
@@ -1539,7 +1540,9 @@
         function calculateFees() {
             return new Promise((resolve, reject) => {
                 const [senders, privKeys, receivers, amounts] = getTransactionInputs();
+                // renderFeesUI();
                 btcOperator.createSignedTx(senders, privKeys, receivers, amounts).then(fees => {
+                    console.debug(fees);
                     document.getElementById('recommended_fee').textContent = formatAmount(getConvertedAmount(fees));
                     getRef('send_transaction').disabled = false;
                     getRef('fees_section').classList.remove('hidden')
