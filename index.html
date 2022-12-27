@@ -460,8 +460,8 @@
             <sm-input class="receiver-input" placeholder="Receiver address" data-btc-address
                 error-text="Invalid BTC address" animate required></sm-input>
             <div class="flex align-start gap-0-5 remove-card-wrapper">
-                <sm-input type="number" class="amount-input" placeholder="Amount" min="0.0000001" step="0.00000001"
-                    error-text="Invalid amount" animate required>
+                <sm-input type="number" class="amount-input amount-shown" placeholder="Amount" min="0.0000001"
+                    step="0.00000001" error-text="Invalid amount" animate required>
                     <div class="currency-symbol flex" slot="icon"></div>
                 </sm-input>
                 <button class="remove-card button--small">
@@ -679,6 +679,7 @@
             return M.join(' ');
         }
         window.addEventListener('hashchange', e => showPage(window.location.hash))
+        let selectedCurrency
         window.addEventListener("load", () => {
             const [browserName, browserVersion] = detectBrowser().split(' ');
             const supportedVersions = {
@@ -709,7 +710,7 @@
                 }
             });
             showPage(window.location.hash)
-            const selectedCurrency = localStorage.getItem('btc-wallet-currency') || 'btc'
+            selectedCurrency = localStorage.getItem('btc-wallet-currency') || 'btc'
             getRef('currency_selector').value = selectedCurrency
             getRef('add_sender').click();
             getRef('add_receiver').click();
@@ -1314,14 +1315,42 @@
             const result = parseFloat((amount * globalExchangeRate[getRef('currency_selector').value]).toFixed(8))
             return result
         }
+        function roundUp(amount, precision = 2) {
+            return parseFloat((Math.ceil(amount * Math.pow(10, precision)) / Math.pow(10, precision)).toFixed(precision))
+        }
         getRef('currency_selector').addEventListener('change', async e => {
             if (!globalExchangeRate.hasOwnProperty(e.target.value))
                 await getExchangeRate();
             localStorage.setItem('btc-wallet-currency', e.target.value);
             document.querySelectorAll('.currency-symbol').forEach(el => el.innerHTML = currencyIcons[e.target.value])
             document.querySelectorAll('.amount-shown').forEach(el => {
-                el.textContent = formatAmount(getConvertedAmount(el.dataset.btcAmount))
+                if (el.tagName.includes('SM-')) {
+                    const originalAmount = parseFloat(el.value.trim());
+                    let convertedAmount
+                    const rupeeRate = (globalExchangeRate.inr / globalExchangeRate.usd);
+                    switch (selectedCurrency) {
+                        case 'usd':
+                            if (e.target.value === 'inr')
+                                convertedAmount = roundUp(originalAmount * rupeeRate)
+                            else
+                                convertedAmount = roundUp((originalAmount / globalExchangeRate.usd), 8)
+                            break;
+                        case 'inr':
+                            if (e.target.value === 'usd')
+                                convertedAmount = roundUp((originalAmount / rupeeRate))
+                            else
+                                convertedAmount = roundUp((originalAmount / globalExchangeRate.inr), 8)
+                            break;
+                        case 'btc':
+                            convertedAmount = roundUp(originalAmount * globalExchangeRate[e.target.value])
+                            break;
+                    }
+                    el.value = convertedAmount
+                } else {
+                    el.textContent = formatAmount(getConvertedAmount(el.dataset.btcAmount))
+                }
             })
+            selectedCurrency = e.target.value;
         })
         getRef('filter_selector').addEventListener('change', async e => {
             const address = getRef('search_query_input').value;
@@ -1470,7 +1499,7 @@
                 case 'custom':
                     renderElem(getRef('fees_wrapper'), html`
                         <p id="selected_fee_tip">Set custom fee</p>
-                        <sm-input type="number" id="send_fee" placeholder="Fee" min="0.00000001" step="0.00000001"
+                        <sm-input type="number" id="send_fee" class="amount-shown" placeholder="Fee" min="0.00000001" step="0.00000001"
                             error-text="Please enter valid fees" animate required>
                             <div class="currency-symbol flex" slot="icon"></div>
                         </sm-input>
@@ -1496,37 +1525,6 @@
                     break;
             }
         })
-        function renderFeesUI(type = getRef('fees_selector').value, error) {
-            switch (type) {
-                case 'custom':
-                    renderElem(getRef('fees_wrapper'), html`
-                        <p id="selected_fee_tip">Set custom fee</p>
-                        <sm-input type="number" id="send_fee" placeholder="Fee" min="0.00000001" step="0.00000001"
-                            error-text="Please enter valid fees" animate required>
-                            <div class="currency-symbol flex" slot="icon"></div>
-                        </sm-input>
-                    `)
-                    document.getElementById('send_fee').focusIn();
-                    getRef('fees_wrapper').querySelector('.currency-symbol').innerHTML = currencyIcons[getRef('currency_selector').value];
-                    getRef('fees_section').classList.remove('hidden')
-                    renderElem(getRef('error_section'), html``)
-                    break;
-                case 'suggested':
-                    if (getRef('send_transaction').disabled) {
-                        renderElem(getRef('fees_wrapper'), html`
-                            <h4 id="recommended_fee"></h4>
-                            <p>Fees will be calculated when above form is properly filled</p>
-                         `)
-                    } else {
-                        renderElem(getRef('fees_wrapper'), html`
-                            <h4 id="recommended_fee"></h4>
-                         `)
-                    }
-                    getRef('fees_section').classList.remove('hidden')
-                    renderElem(getRef('error_section'), html``)
-                    break;
-            }
-        }
 
         function getTransactionInputs() {
             const senders = [...new Set([...getRef('sender_container').querySelectorAll('.sender-input')].map(input => input.value.trim()))];
