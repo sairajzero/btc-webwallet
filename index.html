@@ -1566,7 +1566,6 @@
         }
 
         getRef('send_tx').addEventListener('valid', debounce(e => {
-            console.log('valid', e)
             if (getRef('fees_selector').value === 'suggested') {
                 calculateFees()
             } else {
