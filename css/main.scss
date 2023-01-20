@@ -765,6 +765,12 @@ ol {
   display: grid;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
+  sm-input {
+    border-radius: 0.5rem;
+    &.error {
+      border: var(--danger-color) solid;
+    }
+  }
 }
 .receiver-card {
   display: grid;

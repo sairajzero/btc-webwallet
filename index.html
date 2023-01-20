@@ -401,7 +401,8 @@
         <fieldset class="sender-card card">
             <sm-input class="sender-input" placeholder="Sender address" data-btc-address
                 error-text="Invalid BTC address" animate required></sm-input>
-            <sm-input class="priv-key-input password-field" type="password" placeholder="Private Key" animate required>
+            <sm-input class="priv-key-input password-field" type="password" placeholder="Private Key"
+                error-text="Invalid private key" animate required>
                 <svg class="icon" slot="icon" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24"
                     height="24px" viewBox="0 0 24 24" width="24px" fill="#000000">
                     <g>
@@ -1532,10 +1533,10 @@
         }
         function calculateFees() {
             return new Promise((resolve, reject) => {
-                document.getElementById('recommended_fee').innerHTML = '<sm-spinner></sm-spinner>';
+                renderElem(getRef('fees_wrapper'), html`<sm-spinner></sm-spinner>`)
                 const [senders, privKeys, receivers, amounts] = getTransactionInputs();
                 btcOperator.createSignedTx(senders, privKeys, receivers, amounts).then(({ fee }) => {
-                    document.getElementById('recommended_fee').textContent = formatAmount(getConvertedAmount(fee));
+                    renderElem(getRef('fees_wrapper'), html` <b id="recommended_fee">${formatAmount(getConvertedAmount(fee))}</b> `)
                     getRef('send_transaction').disabled = false;
                     getRef('fees_section').classList.remove('hidden')
                     getRef('error_section').classList.add('hidden')
@@ -1544,14 +1545,22 @@
                     getRef('send_transaction').disabled = true;
                     getRef('fees_section').classList.add('hidden')
                     getRef('error_section').classList.remove('hidden')
-                    console.error(e);
-                    renderElem(getRef('error_section'), html`
-                        <p id="selected_fee_tip" class="error flex align-center gap-0-5">
-                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M11 15h2v2h-2v-2zm0-8h2v6h-2V7zm.99-5C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/></svg>
-                            ${e}
-                        </p>
-                     `)
-                    reject(e)
+                    if (e.includes('Invalid private key')) {
+                        const invalidKeys = e.split(':')[1].split(',').map(key => key.trim());
+                        invalidKeys.forEach(key => {
+                            const input = [...getRef('sender_container').querySelectorAll('.sender-input')].find(input => input.value.trim() === key);
+                            if (input)
+                                input.nextElementSibling.showError()
+                        })
+                    } else {
+                        renderElem(getRef('error_section'), html`
+                            <p id="selected_fee_tip" class="error flex align-center gap-0-5">
+                                <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M11 15h2v2h-2v-2zm0-8h2v6h-2V7zm.99-5C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/></svg>
+                                ${e}
+                            </p>
+                         `)
+                        reject(e)
+                    }
                 })
             })
         }
@@ -1568,8 +1577,7 @@
             }
         }, 300))
         getRef('send_tx').addEventListener('invalid', e => {
-            getRef('fees_section').classList.remove('hidden')
-            getRef('error_section').classList.add('hidden')
+            renderFeesUI()
             getRef('send_transaction').disabled = true;
         })
 

@@ -825,6 +825,12 @@ ol li::before {
   gap: 0.5rem;
   margin-bottom: 0.5rem;
 }
+.sender-card sm-input {
+  border-radius: 0.5rem;
+}
+.sender-card sm-input.error {
+  border: var(--danger-color) solid;
+}
 
 .receiver-card {
   display: grid;
