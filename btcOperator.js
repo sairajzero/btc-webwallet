@@ -1,4 +1,4 @@
-(function (EXPORTS) { //btcOperator v1.0.14b
+(function (EXPORTS) { //btcOperator v1.0.14c
     /* BTC Crypto and API Operator */
     const btcOperator = EXPORTS;
 
@@ -308,7 +308,7 @@
                     parameters.privkeys[i] = coinjs.privkey2wif(key);
             });
             if (invalids.length)
-                throw "Invalid keys:" + invalids;
+                throw "Invalid private key for address:" + invalids;
         }
         //receiver-ids (and change-id)
         if (!Array.isArray(parameters.receivers))
