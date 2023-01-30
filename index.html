@@ -1172,13 +1172,12 @@
                     txDetailsAbortController.abort()
                 }
                 txDetailsAbortController = new AbortController();
-                fetch(`https://chain.so/api/v2/tx/BTC/${txid}`, { signal: txDetailsAbortController.signal }).then(res => res.json()).then(res => {
-                    console.debug(res);
-                    if (res.status === 'success') {
-                        console.debug('tx', res.data);
-                        const { block_no, time, size, fee, inputs, outputs, confirmations } = res.data;
-                        const totalInputs = inputs.reduce((acc, input) => acc + parseFloat(input.value), 0);
-                        const totalOutputs = outputs.reduce((acc, output) => acc + parseFloat(output.value), 0);
+                btcOperator.getTx(txid).then(result => {
+
+
+                    const { block, time, size, fee, inputs, outputs, confirmations, total_input_value, total_output_value } = result;
+
+                    console.debug('tx', result);
                         renderElem(getRef('tx_details'), html`
                             <table class="margin-bottom-1-5 justify-self-center">
                                 <tbody>
@@ -1188,7 +1187,7 @@
                                     </tr>
                                     <tr>
                                         <td>Block</td>
-                                        <td>${block_no}</td>
+                                        <td>${block}</td>
                                     </tr>
                                     <tr>
                                         <td>Confirmations</td>
@@ -1200,15 +1199,15 @@
                                     </tr>
                                     <tr>
                                         <td>Time</td>
-                                        <td>${getFormattedTime(time * 1000)}</td>
+                                        <td>${getFormattedTime(time)}</td>
                                     </tr>
                                     <tr>
                                         <td>Total Inputs</td>
-                                        <td class="amount-shown" data-btc-amount="${totalInputs}">${formatAmount(getConvertedAmount(totalInputs))}</td>
+                                        <td class="amount-shown" data-btc-amount="${total_input_value}">${formatAmount(getConvertedAmount(total_input_value))}</td>
                                     </tr>
                                     <tr>
                                         <td>Total Outputs</td>
-                                        <td class="amount-shown" data-btc-amount="${totalOutputs}">${formatAmount(getConvertedAmount(totalOutputs))}</td>
+                                        <td class="amount-shown" data-btc-amount="${total_output_value}">${formatAmount(getConvertedAmount(total_output_value))}</td>
                                     </tr>
                                     <tr>
                                         <td>Fee</td>
@@ -1247,9 +1246,6 @@
                                 </div>
                             </div>
                             `)
-                    } else {
-                        notify(res.data.message, 'error')
-                    }
                 }).catch(err => {
                     notify(err, 'error')
                     renderElem(getRef('tx_details'), html``)
